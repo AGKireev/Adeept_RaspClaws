@@ -44,7 +44,7 @@ import asyncio
 import websockets
 
 import json
-import app
+# import app
 
 OLED_connection = 0
 
