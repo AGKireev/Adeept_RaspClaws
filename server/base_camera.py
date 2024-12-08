@@ -64,12 +64,16 @@ class BaseCamera(object):
             BaseCamera.last_access = time.time()
 
             # start background frame thread
-            BaseCamera.thread = threading.Thread(target=self._thread)
-            BaseCamera.thread.start()
+            try:
+                BaseCamera.thread = threading.Thread(target=self._thread)
+                BaseCamera.thread.start()
 
-            # wait until frames are available
-            while self.get_frame() is None:
-                time.sleep(0)
+                # wait until frames are available
+                while self.get_frame() is None:
+                    time.sleep(0)
+            except Exception as e:
+                print(f"Error initializing camera: {e}")
+                BaseCamera.thread = None
 
     def get_frame(self):
         """Return the current camera frame."""
@@ -90,16 +94,20 @@ class BaseCamera(object):
     def _thread(cls):
         """Camera background thread."""
         print('Starting camera thread.')
-        frames_iterator = cls.frames()
-        for frame in frames_iterator:
-            BaseCamera.frame = frame
-            BaseCamera.event.set()  # send signal to clients
-            time.sleep(0)
+        try:
+            frames_iterator = cls.frames()
+            for frame in frames_iterator:
+                BaseCamera.frame = frame
+                BaseCamera.event.set()  # send signal to clients
+                time.sleep(0)
 
-            # if there hasn't been any clients asking for frames in
-            # the last 10 seconds then stop the thread
-            # if time.time() - BaseCamera.last_access > 10:
-            #     frames_iterator.close()
-            #     print('Stopping camera thread due to inactivity.')
-            #     break
-        BaseCamera.thread = None
+                # if there hasn't been any clients asking for frames in
+                # the last 10 seconds then stop the thread
+                if time.time() - BaseCamera.last_access > 10:
+                    frames_iterator.close()
+                    print('Stopping camera thread due to inactivity.')
+                    break
+        except Exception as e:
+            print(f"Error in camera thread: {e}")
+        finally:
+            BaseCamera.thread = None
