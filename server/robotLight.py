@@ -1,41 +1,24 @@
 #!/usr/bin/env python3
 # File name   : servo.py
 # Description : Control lights
-# Author      : William
-# Date        : 2019/02/23
-
+# Author	  : William
+# Date		: 2019/02/23
 import time
+import RPi.GPIO as GPIO
 import sys
-import threading
 from rpi_ws281x import *
+import threading
 
-try:
-    import RPi.GPIO as GPIO
-    GPIO.setwarnings(False)
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(5, GPIO.OUT)
-    GPIO.setup(6, GPIO.OUT)
-    GPIO.setup(13, GPIO.OUT)
-    GPIO.setup(22, GPIO.OUT)
-    GPIO.setup(23, GPIO.OUT)
-    GPIO.setup(24, GPIO.OUT)
-    GPIO.setup(10, GPIO.OUT)
-    GPIO.setup(9, GPIO.OUT)
-    GPIO.setup(25, GPIO.OUT)
-    gpio_available = True
-except RuntimeError:
-    print("GPIO setup failed. Running in simulation mode.")
-    gpio_available = False
 
 class RobotLight(threading.Thread):
     def __init__(self, *args, **kwargs):
-        self.LED_COUNT      = 16      # Number of LED pixels.
-        self.LED_PIN        = 12      # GPIO pin connected to the pixels (18 uses PWM!).
-        self.LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
-        self.LED_DMA        = 10      # DMA channel to use for generating signal (try 10)
-        self.LED_BRIGHTNESS = 255     # Set to 0 for darkest and 255 for brightest
-        self.LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
-        self.LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
+        self.LED_COUNT	  	= 16	  # Number of LED pixels.
+        self.LED_PIN		= 12	  # GPIO pin connected to the pixels (18 uses PWM!).
+        self.LED_FREQ_HZ	= 800000  # LED signal frequency in hertz (usually 800khz)
+        self.LED_DMA		= 10	  # DMA channel to use for generating signal (try 10)
+        self.LED_BRIGHTNESS = 255	 # Set to 0 for darkest and 255 for brightest
+        self.LED_INVERT	 = False   # True to invert the signal (when using NPN transistor level shift)
+        self.LED_CHANNEL	= 0	   # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
         self.colorBreathR = 0
         self.colorBreathG = 0
@@ -50,18 +33,23 @@ class RobotLight(threading.Thread):
         self.right_G = 9
         self.right_B = 25
 
-        self.on  = GPIO.LOW if gpio_available else None
-        self.off = GPIO.HIGH if gpio_available else None
+        self.on  = GPIO.LOW
+        self.off = GPIO.HIGH
 
-        self.lightMode = 'none'     #'none' 'police' 'breath'
+        self.lightMode = 'none'		#'none' 'police' 'breath'
 
-        if gpio_available:
-            GPIO.setup(self.left_R, GPIO.OUT)
-            GPIO.setup(self.left_G, GPIO.OUT)
-            GPIO.setup(self.left_B, GPIO.OUT)
-            GPIO.setup(self.right_R, GPIO.OUT)
-            GPIO.setup(self.right_G, GPIO.OUT)
-            GPIO.setup(self.right_B, GPIO.OUT)
+        GPIO.setwarnings(False)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(5, GPIO.OUT)
+        GPIO.setup(6, GPIO.OUT)
+        GPIO.setup(13, GPIO.OUT)
+
+        GPIO.setup(self.left_R, GPIO.OUT)
+        GPIO.setup(self.left_G, GPIO.OUT)
+        GPIO.setup(self.left_B, GPIO.OUT)
+        GPIO.setup(self.right_R, GPIO.OUT)
+        GPIO.setup(self.right_G, GPIO.OUT)
+        GPIO.setup(self.right_B, GPIO.OUT)
 
         # Create NeoPixel object with appropriate configuration.
         self.strip = Adafruit_NeoPixel(self.LED_COUNT, self.LED_PIN, self.LED_FREQ_HZ, self.LED_DMA, self.LED_INVERT, self.LED_BRIGHTNESS, self.LED_CHANNEL)
@@ -72,79 +60,72 @@ class RobotLight(threading.Thread):
         self.__flag = threading.Event()
         self.__flag.clear()
 
-    def both_off(self):
-        if gpio_available:
-            GPIO.output(self.left_R, self.off)
-            GPIO.output(self.left_G, self.off)
-            GPIO.output(self.left_B, self.off)
 
-            GPIO.output(self.right_R, self.off)
-            GPIO.output(self.right_G, self.off)
-            GPIO.output(self.right_B, self.off)
-        else:
-            print("both_off command received, but GPIO is not available.")
+    def both_off(self):
+        GPIO.output(self.left_R, self.off)
+        GPIO.output(self.left_G, self.off)
+        GPIO.output(self.left_B, self.off)
+
+        GPIO.output(self.right_R, self.off)
+        GPIO.output(self.right_G, self.off)
+        GPIO.output(self.right_B, self.off)
+
 
     def both_on(self):
-        if gpio_available:
-            GPIO.output(self.left_R, self.on)
-            GPIO.output(self.left_G, self.on)
-            GPIO.output(self.left_B, self.on)
+        GPIO.output(self.left_R, self.on)
+        GPIO.output(self.left_G, self.on)
+        GPIO.output(self.left_B, self.on)
 
-            GPIO.output(self.right_R, self.on)
-            GPIO.output(self.right_G, self.on)
-            GPIO.output(self.right_B, self.on)
-        else:
-            print("both_on command received, but GPIO is not available.")
+        GPIO.output(self.right_R, self.on)
+        GPIO.output(self.right_G, self.on)
+        GPIO.output(self.right_B, self.on)
+
 
     def side_on(self, side_X):
-        if gpio_available:
-            GPIO.output(side_X, self.on)
-        else:
-            print(f"side_on command received for {side_X}, but GPIO is not available.")
+        GPIO.output(side_X, self.on)
+
 
     def side_off(self, side_X):
-        if gpio_available:
-            GPIO.output(side_X, self.off)
-        else:
-            print(f"side_off command received for {side_X}, but GPIO is not available.")
+        GPIO.output(side_X, self.off)
+
 
     def red(self):
         self.side_on(self.right_R)
         self.side_on(self.left_R)
 
+
     def green(self):
         self.side_on(self.right_G)
         self.side_on(self.left_G)
+
 
     def blue(self):
         self.side_on(self.right_B)
         self.side_on(self.left_B)
 
+
     def yellow(self):
         self.red()
-        self.green()    
+        self.green()
+
 
     def pink(self):
         self.red()
         self.blue()
 
+
     def cyan(self):
         self.blue()
         self.green()
 
+
     def turnLeft(self):
-        if gpio_available:
-            GPIO.output(self.left_G, self.on)
-            GPIO.output(self.left_R, self.on)
-        else:
-            print("turnLeft command received, but GPIO is not available.")
+        GPIO.output(self.left_G, self.on)
+        GPIO.output(self.left_R, self.on)
 
     def turnRight(self):
-        if gpio_available:
-            GPIO.output(self.right_G, self.on)
-            GPIO.output(self.right_R, self.on)
-        else:
-            print("turnRight command received, but GPIO is not available.")
+        GPIO.output(self.right_G, self.on)
+        GPIO.output(self.right_R, self.on)
 
     # Define functions which animate LEDs in various ways.
     def setColor(self, R, G, B):
@@ -152,25 +133,31 @@ class RobotLight(threading.Thread):
         color = Color(int(R),int(G),int(B))
         for i in range(self.strip.numPixels()):
             self.strip.setPixelColor(i, color)
-        self.strip.show()
+            self.strip.show()
+
 
     def setSomeColor(self, R, G, B, ID):
         color = Color(int(R),int(G),int(B))
+        #print(int(R),'  ',int(G),'  ',int(B))
         for i in ID:
             self.strip.setPixelColor(i, color)
-        self.strip.show()
+            self.strip.show()
+
 
     def pause(self):
         self.lightMode = 'none'
         self.setColor(0,0,0)
         self.__flag.clear()
 
+
     def resume(self):
         self.__flag.set()
+
 
     def police(self):
         self.lightMode = 'police'
         self.resume()
+
 
     def policeProcessing(self):
         while self.lightMode == 'police':
@@ -193,12 +180,14 @@ class RobotLight(threading.Thread):
                 time.sleep(0.05)
             time.sleep(0.1)
 
+
     def breath(self, R_input, G_input, B_input):
         self.lightMode = 'breath'
         self.colorBreathR = R_input
         self.colorBreathG = G_input
         self.colorBreathB = B_input
         self.resume()
+
 
     def breathProcessing(self):
         while self.lightMode == 'breath':
@@ -213,58 +202,54 @@ class RobotLight(threading.Thread):
                 self.setColor(self.colorBreathR-(self.colorBreathR*i/self.breathSteps), self.colorBreathG-(self.colorBreathG*i/self.breathSteps), self.colorBreathB-(self.colorBreathB*i/self.breathSteps))
                 time.sleep(0.03)
 
+
     def frontLight(self, switch):
-        if gpio_available:
-            if switch == 'on':
-                GPIO.output(6, GPIO.HIGH)
-                GPIO.output(13, GPIO.HIGH)
-            elif switch == 'off':
-                GPIO.output(5,GPIO.LOW)
-                GPIO.output(13,GPIO.LOW)
-        else:
-            print(f"frontLight command received to turn {switch}, but GPIO is not available.")
+        if switch == 'on':
+            GPIO.output(6, GPIO.HIGH)
+            GPIO.output(13, GPIO.HIGH)
+        elif switch == 'off':
+            GPIO.output(5,GPIO.LOW)
+            GPIO.output(13,GPIO.LOW)
+
 
     def switch(self, port, status):
-        if gpio_available:
-            if port == 1:
-                if status == 1:
-                    GPIO.output(5, GPIO.HIGH)
-                elif status == 0:
-                    GPIO.output(5,GPIO.LOW)
-                else:
-                    pass
-            elif port == 2:
-                if status == 1:
-                    GPIO.output(6, GPIO.HIGH)
-                elif status == 0:
-                    GPIO.output(6,GPIO.LOW)
-                else:
-                    pass
-            elif port == 3:
-                if status == 1:
-                    GPIO.output(13, GPIO.HIGH)
-                elif status == 0:
-                    GPIO.output(13,GPIO.LOW)
-                else:
-                    pass
+        if port == 1:
+            if status == 1:
+                GPIO.output(5, GPIO.HIGH)
+            elif status == 0:
+                GPIO.output(5,GPIO.LOW)
             else:
-                print('Wrong Command: Example--switch(3, 1)->to switch on port3')
+                pass
+        elif port == 2:
+            if status == 1:
+                GPIO.output(6, GPIO.HIGH)
+            elif status == 0:
+                GPIO.output(6,GPIO.LOW)
+            else:
+                pass
+        elif port == 3:
+            if status == 1:
+                GPIO.output(13, GPIO.HIGH)
+            elif status == 0:
+                GPIO.output(13,GPIO.LOW)
+            else:
+                pass
         else:
-            print(f"switch command received for port {port} with status {status}, but GPIO is not available.")
+            print('Wrong Command: Example--switch(3, 1)->to switch on port3')
+
 
     def set_all_switch_off(self):
         self.switch(1,0)
         self.switch(2,0)
         self.switch(3,0)
 
+
     def headLight(self, switch):
-        if gpio_available:
-            if switch == 'on':
-                GPIO.output(5, GPIO.HIGH)
-            elif switch == 'off':
-                GPIO.output(5,GPIO.LOW)
-        else:
-            print(f"headLight command received to turn {switch}, but GPIO is not available.")
+        if switch == 'on':
+            GPIO.output(5, GPIO.HIGH)
+        elif switch == 'off':
+            GPIO.output(5,GPIO.LOW)
+
 
     def lightChange(self):
         if self.lightMode == 'none':
@@ -274,14 +259,16 @@ class RobotLight(threading.Thread):
         elif self.lightMode == 'breath':
             self.breathProcessing()
 
+
     def run(self):
         while 1:
             self.__flag.wait()
             self.lightChange()
             pass
 
+
 if __name__ == '__main__':
-    RL = RobotLight()
+    RL=RobotLight()
     RL.start()
     RL.breath(70,70,255)
     time.sleep(15)
