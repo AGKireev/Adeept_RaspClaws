@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# File name   : server.py
+# File name   : webServer.py
 # Production  : GWR
 # Website     : www.adeept.com
 # Author      : William
@@ -38,13 +38,19 @@ import functions
 import robotLight
 import switch
 import socket
+import logging
 
 # websocket related imports
 import asyncio
 import websockets
 
 import json
-import app
+from app import WebApp
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+logger.info('Starting server.py')
 
 OLED_connection = 0
 
@@ -77,6 +83,7 @@ init_pwm = []
 for i in range(16):
 	init_pwm.append(scGear.initPos[i])
 
+logger.info('Initializing functions')
 fuc = functions.Functions()
 fuc.start()
 
@@ -96,7 +103,7 @@ def replace_num(initial,new_num):   #Call this function to replace data in 'RPIs
 	str_num=str(new_num)
 	with open(thisPath+"/RPIservo.py","r") as f:
 		for line in f.readlines():
-			if(line.find(initial) == 0):
+			if line.find(initial) == 0:
 				line = initial+"%s" %(str_num+"\n")
 			newline += line
 	with open(thisPath+"/RPIservo.py","w") as f:
@@ -120,13 +127,13 @@ def functionSelect(command_input, response):
 		pass
 
 	elif 'findColor' == command_input:
-		flask_app.modeselect('findColor')
+		flask_app.mode_select('findColor')
 
 	elif 'motionGet' == command_input:
-		flask_app.modeselect('watchDog')
+		flask_app.mode_select('watchDog')
 
 	elif 'stopCV' == command_input:
-		flask_app.modeselect('none')
+		flask_app.mode_select('none')
 		switch.switch(1,0)
 		switch.switch(2,0)
 		switch.switch(3,0)
@@ -141,10 +148,10 @@ def functionSelect(command_input, response):
 		move.commandInput(command_input)
 
 	elif 'trackLine' == command_input:
-		flask_app.modeselect('findlineCV')
+		flask_app.mode_select('findlineCV')
 
 	elif 'trackLineOff' == command_input:
-		flask_app.modeselect('none')
+		flask_app.mode_select('none')
 
 	elif 'police' == command_input:
 		RL.police()
@@ -267,13 +274,15 @@ def configPWM(command_input, response):
 # 					json.dump(config, f2)
 
 def wifi_check():
+	logger.info('Checking wifi')
 	# Checks wifi and starts AP if needed, no servo logic here.
 	try:
-		s =socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+		s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 		s.connect(("1.1.1.1",80))
 		ipaddr_check=s.getsockname()[0]
 		s.close()
-		print(ipaddr_check)
+		# print(ipaddr_check)
+		logger.info(f'IP: {ipaddr_check}')
 		# update_code()
 		if OLED_connection:
 			screen.screen_show(2, 'IP:'+ipaddr_check)
@@ -335,12 +344,12 @@ async def recv_msg(websocket):
 			'data' : None
 		}
 
-		data = ''
 		data = await websocket.recv()
 		try:
 			data = json.loads(data)
 		except Exception as e:
-			print('not A JSON')
+			# print('not A JSON')
+			logger.error(f'Not a JSON: {data}')
 
 		if not data:
 			continue
@@ -381,7 +390,7 @@ async def recv_msg(websocket):
 
 			#CVFL
 			elif 'CVFL' == data:
-				flask_app.modeselect('findlineCV')
+				flask_app.mode_select('findlineCV')
 
 			elif 'CVFLColorSet' in data:
 				color = int(data.split()[1])
@@ -402,10 +411,10 @@ async def recv_msg(websocket):
 			elif 'defEC' in data:#Z
 				fpv.defaultExpCom()
 
-		elif(isinstance(data,dict)):
+		elif isinstance(data, dict):
 			if data['title'] == "findColorSet":
 				color = data['data']
-				flask_app.colorFindSet(color[0],color[1],color[2])
+				flask_app.color_find_set(color[0],color[1],color[2])
 
 		if not functionMode:
 			if OLED_connection:
@@ -413,15 +422,17 @@ async def recv_msg(websocket):
 		else:
 			pass
 
-		print(data)
+		logger.info(f'Received data: {data}')
 		response = json.dumps(response)
 		await websocket.send(response)
 
 async def main_logic(websocket, path):
+	logger.info('main_logic')
 	await check_permit(websocket)
 	await recv_msg(websocket)
 
 if __name__ == '__main__':
+	logger.info('Starting main loop')
 	switch.switchSetup()
 	switch.set_all_switch_off()
 
@@ -430,28 +441,32 @@ if __name__ == '__main__':
 	BUFSIZ = 1024
 	ADDR = (HOST, PORT)
 
-	global flask_app
-	flask_app = app.webapp()
-	flask_app.startthread()
-
 	try:
+		logger.info('Starting RobotLight')
 		RL = robotLight.RobotLight()
 		RL.start()
 		RL.breath(70,70,255)
-	except:
-		print('Use "sudo pip3 install rpi_ws281x" to install WS_281x package')
+	except Exception as e:
+		logger.error('Failed to start RobotLight with exception: {e}')
 		RL = None
+
+	# global flask_app
+	# flask_app = app.webapp()
+	logger.info('Starting WebApp')
+	flask_app = WebApp()
+	flask_app.start_thread()
 
 	while 1:
 		wifi_check()
 		try:
 			# Start websocket server
+			logger.info('Starting websocket server')
 			start_server = websockets.serve(main_logic, '0.0.0.0', 8888)
 			asyncio.get_event_loop().run_until_complete(start_server)
-			print('waiting for connection...')
+			logger.info('waiting for connection...')
 			break
 		except Exception as e:
-			print(e)
+			logger.error(f'Loop Exception: {e}')
 			if RL:
 				RL.setColor(0,0,0)
 
@@ -464,7 +479,7 @@ if __name__ == '__main__':
 	try:
 		asyncio.get_event_loop().run_forever()
 	except Exception as e:
-		print(e)
+		logger.error(f'Asyncio Exception: {e}')
 		if RL:
 			RL.setColor(0,0,0)
 		move.destroy()

@@ -351,7 +351,7 @@ class Camera(BaseCamera):
 		super(Camera, self).__init__()
 
 
-	def colorFindSet(self, invarH, invarS, invarV):
+	def color_find_set(self, invarH, invarS, invarV):
 		global colorUpper, colorLower
 		HUE_1 = invarH+15
 		HUE_2 = invarH-15

@@ -28,6 +28,8 @@ sudo systemctl status adeept_webserver.service
 # How to set/reset service
 
 # How to Fix led errors for Raspberry 5
+# @from https://github.com/jgarff/rpi_ws281x/issues/528
+# @from https://github.com/rpi-ws281x/rpi-ws281x-python/releases
 sudo apt update
 sudo apt install linux-headers-$(uname -r) device-tree-compiler raspi-utils
 git clone --branch pi5 https://github.com/jgarff/rpi_ws281x.git
