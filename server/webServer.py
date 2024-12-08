@@ -253,17 +253,18 @@ def configPWM(command_input, response):
 
 
 
-def update_code():
-	# Updates code if not in production
-	projectPath = thisPath[:-7]
-	if not config['production'] and os.path.exists(f'{projectPath}/config.json'):
-		with open(f'{projectPath}/config.json', 'r') as f1:
-			config = json.load(f1)
-			print('Update code')
-			os.system(f'cd {projectPath} && sudo git fetch --all && git reset --hard origin/master && git pull')
-			config['production'] = True
-			with open(f'{projectPath}/config.json', 'w') as f2:
-				json.dump(config, f2)
+# def update_code():
+# 	# Updates code if not in production
+# 	projectPath = thisPath[:-7]
+# 	if os.path.exists(f'{projectPath}/config.json'):
+# 		with open(f'{projectPath}/config.json', 'r') as f1:
+# 			config = json.load(f1)
+# 			if not config['production']:
+# 				print('Update code')
+# 				os.system(f'cd {projectPath} && sudo git fetch --all && git reset --hard origin/master && git pull')
+# 				config['production'] = True
+# 				with open(f'{projectPath}/config.json', 'w') as f2:
+# 					json.dump(config, f2)
 
 def wifi_check():
 	# Checks wifi and starts AP if needed, no servo logic here.
@@ -273,7 +274,7 @@ def wifi_check():
 		ipaddr_check=s.getsockname()[0]
 		s.close()
 		print(ipaddr_check)
-		update_code()
+		# update_code()
 		if OLED_connection:
 			screen.screen_show(2, 'IP:'+ipaddr_check)
 			screen.screen_show(3, 'AP MODE OFF')
@@ -424,14 +425,6 @@ if __name__ == '__main__':
 	switch.switchSetup()
 	switch.set_all_switch_off()
 
-	try:
-		RL = robotLight.RobotLight()
-		RL.start()
-		RL.breath(70,70,255)
-	except:
-		print('Use "sudo pip3 install rpi_ws281x" to install WS_281x package')
-		RL = None
-
 	HOST = ''
 	PORT = 10223
 	BUFSIZ = 1024
@@ -440,6 +433,14 @@ if __name__ == '__main__':
 	global flask_app
 	flask_app = app.webapp()
 	flask_app.startthread()
+
+	try:
+		RL = robotLight.RobotLight()
+		RL.start()
+		RL.breath(70,70,255)
+	except:
+		print('Use "sudo pip3 install rpi_ws281x" to install WS_281x package')
+		RL = None
 
 	while 1:
 		wifi_check()
