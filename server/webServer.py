@@ -421,17 +421,17 @@ async def main_logic(websocket, path):
     await recv_msg(websocket)
 
 if __name__ == '__main__':
-    switch.switchSetup()
-    switch.set_all_switch_off()
+    # switch.switchSetup()
+    # switch.set_all_switch_off()
 
-    HOST = ''
-    PORT = 10223
-    BUFSIZ = 1024
-    ADDR = (HOST, PORT)
+    # HOST = ''
+    # PORT = 10223
+    # BUFSIZ = 1024
+    # ADDR = (HOST, PORT)
 
-    global flask_app
-    flask_app = app.webapp()
-    flask_app.startthread()
+    # global flask_app
+    # flask_app = app.webapp()
+    # flask_app.startthread()
 
     try:
         RL = robotLight.RobotLight()
@@ -440,6 +440,7 @@ if __name__ == '__main__':
     except:
         print('Use "sudo pip3 install rpi_ws281x" to install WS_281x package')
         RL = None
+    quit()
 
     while 1:
         wifi_check()
