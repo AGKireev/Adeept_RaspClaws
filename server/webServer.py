@@ -171,7 +171,7 @@ def switchCtrl(command_input, response):
         switch.switch(3,1)
 
     elif 'Switch_3_off' in command_input:
-        switch.switch(3,0) 
+        switch.switch(3,0)
 
 
 def robotCtrl(command_input, response):
@@ -182,7 +182,7 @@ def robotCtrl(command_input, response):
     if 'forward' == command_input:
         direction_command = 'forward'
         move.commandInput(direction_command)
-    
+
     elif 'backward' == command_input:
         direction_command = 'backward'
         move.commandInput(direction_command)
@@ -219,7 +219,7 @@ def robotCtrl(command_input, response):
     elif 'up' == command_input:
         T_sc.singleServo(13, -1, 7)
 
-    elif 'down' == command_input:
+    elif 'down' in command_input:
         T_sc.singleServo(13, 1, 7)
 
     elif 'UDstop' in command_input:
@@ -246,7 +246,7 @@ def configPWM(command_input, response):
         for i in range(0,16):
             scGear.initConfig(i, init_pwm[i], 1)
 
-    if 'PWMD' == command_input:
+    if 'PWMD' in command_input:
         for i in range(0,16):
             init_pwm[i] = 300
             replace_num("init_pwm%d = "%numServo, init_pwm[numServo])
@@ -256,15 +256,15 @@ def configPWM(command_input, response):
 def update_code():
     # Updates code if not in production
     projectPath = thisPath[:-7]
-    with open(f'{projectPath}/config.json', 'r') as f1:
-        config = json.load(f1)
-        if not config['production']:
+    if not config['production'] and os.path.exists(f'{projectPath}/config.json'):
+        with open(f'{projectPath}/config.json', 'r') as f1:
+            config = json.load(f1)
             print('Update code')
             os.system(f'cd {projectPath} && sudo git fetch --all && git reset --hard origin/master && git pull')
             config['production'] = True
             with open(f'{projectPath}/config.json', 'w') as f2:
                 json.dump(config, f2)
-		
+        
 def wifi_check():
     # Checks wifi and starts AP if needed, no servo logic here.
     try:
@@ -279,7 +279,7 @@ def wifi_check():
             screen.screen_show(3, 'AP MODE OFF')
     except:
         ap_threading=threading.Thread(target=ap_thread)
-        ap_threading.setDaemon(True)
+        ap_threading.daemon = True
         ap_threading.start()
         if OLED_connection:
             screen.screen_show(2, 'AP Starting 10%')
@@ -327,7 +327,7 @@ async def recv_msg(websocket):
     turn_command = 'no'
 
     # Communication loop with client
-    while True: 
+    while True:
         response = {
             'status' : 'ok',
             'title' : '',
@@ -434,16 +434,16 @@ if __name__ == '__main__':
     flask_app.startthread()
 
     try:
-        RL=robotLight.RobotLight()
+        RL = robotLight.RobotLight()
         RL.start()
         RL.breath(70,70,255)
     except:
         print('Use "sudo pip3 install rpi_ws281x" to install WS_281x package')
-        pass
+        RL = None
 
     while 1:
         wifi_check()
-        try: 
+        try:
             # Start websocket server
             start_server = websockets.serve(main_logic, '0.0.0.0', 8888)
             asyncio.get_event_loop().run_until_complete(start_server)
@@ -451,10 +451,12 @@ if __name__ == '__main__':
             break
         except Exception as e:
             print(e)
-            RL.setColor(0,0,0)
+            if RL:
+                RL.setColor(0,0,0)
 
         try:
-            RL.setColor(0,80,255)
+            if RL:
+                RL.setColor(0,80,255)
         except:
             pass
 
@@ -462,5 +464,6 @@ if __name__ == '__main__':
         asyncio.get_event_loop().run_forever()
     except Exception as e:
         print(e)
-        RL.setColor(0,0,0)
+        if RL:
+            RL.setColor(0,0,0)
         move.destroy()
