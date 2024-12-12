@@ -341,7 +341,7 @@ class CVThread(threading.Thread):
 
 
 class Camera(BaseCamera):
-	video_source = 4
+	video_source = 0
 	modeSelect = 'none'
 	# modeSelect = 'findlineCV'
 	# modeSelect = 'findColor'
