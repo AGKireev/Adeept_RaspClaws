@@ -1,67 +1,52 @@
-#!/usr/bin/env python3
-# File name   : servo.py
-# Description : Control Functions
-# Author      : William
-# Date        : 2020/03/17
-
-import time
-# import RPi.GPIO as GPIO
-import threading
-from mpu6050 import mpu6050
 import os
-# import json
+import time
+import threading
+import logging
+from mpu6050 import mpu6050
+
+import config
 import Kalman_filter
-# import move
 import RPIservo
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+logger.info('Functions: starting..')
+
 # Initialize the servo control instance from RPIservo
+logger.info('Functions: initializing RPIservo')
 scGear = RPIservo.ServoCtrl()
 
 # Initialize Kalman filter for X axis
 kalman_filter_X = Kalman_filter.Kalman_filter(0.01, 0.1)
 
 # Initialize MPU6050 sensor
+logger.info('Functions: initializing MPU6050')
 MPU_connection = 1
 try:
     sensor = mpu6050(0x68)
-    print('mpu6050 connected, PT MODE ON')
+    logger.info('mpu6050 connected, PT MODE ON')
 except:
     MPU_connection = 0
-    print('mpu6050 disconnected, ARM MODE ON')
-
-# Get the current path of the script
-curpath = os.path.realpath(__file__)
-thisPath = "/" + os.path.dirname(curpath)
-
-def num_import_int(initial):
-    '''
-    Import data from '.txt' file.
-    '''
-    global r
-    with open(thisPath + "/RPIservo.py") as f:
-        for line in f.readlines():
-            if line.find(initial) == 0:
-                r = line
-    begin = len(list(initial))
-    snum = r[begin:]
-    n = int(snum)
-    return n
+    logger.info('mpu6050 disconnected, ARM MODE ON')
 
 # Initialize PWM values and directions
+pwm_config = config.read("pwm")
+
 pwm0_direction = 1
-pwm0_init = num_import_int('init_pwm0 = ')
+pwm0_init = pwm_config["init_pwm0"]
 pwm0_max = 520
 pwm0_min = 100
 pwm0_pos = pwm0_init
 
 pwm1_direction = 1
-pwm1_init = num_import_int('init_pwm1 = ')
+pwm1_init = pwm_config["init_pwm1"]
 pwm1_max = 520
 pwm1_min = 100
 pwm1_pos = pwm1_init
 
 pwm2_direction = 1
-pwm2_init = num_import_int('init_pwm2 = ')
+pwm2_init = pwm_config["init_pwm2"]
 pwm2_max = 520
 pwm2_min = 100
 pwm2_pos = pwm2_init
@@ -74,6 +59,7 @@ def pwmGenOut(angleInput):
 
 class Functions(threading.Thread):
     def __init__(self, *args, **kwargs):
+        logger.info('Functions: __init__')
         self.functionMode = 'none'
         self.steadyGoal = 0
 
@@ -95,6 +81,8 @@ class Functions(threading.Thread):
         '''
         Perform a radar scan using the servo.
         '''
+        logger.info('Functions: radarScan')
+
         global pwm0_pos
         scan_speed = 3
         result = []
@@ -122,6 +110,7 @@ class Functions(threading.Thread):
         '''
         Pause the current function.
         '''
+        logger.info('Functions: pause')
         self.functionMode = 'none'
         self.__flag.clear()
 
@@ -129,12 +118,14 @@ class Functions(threading.Thread):
         '''
         Resume the current function.
         '''
+        logger.info('Functions: resume')
         self.__flag.set()
 
     def automatic(self):
         '''
         Set the function mode to automatic.
         '''
+        logger.info('Functions: automatic')
         self.functionMode = 'Automatic'
         self.resume()
 
@@ -142,6 +133,7 @@ class Functions(threading.Thread):
         '''
         Set the function mode to track line.
         '''
+        logger.info('Functions: trackLine')
         self.functionMode = 'trackLine'
         self.resume()
 
@@ -149,6 +141,7 @@ class Functions(threading.Thread):
         '''
         Set the function mode to keep distance.
         '''
+        logger.info('Functions: keepDistance')
         self.functionMode = 'keepDistance'
         self.resume()
 
@@ -156,6 +149,7 @@ class Functions(threading.Thread):
         '''
         Set the function mode to steady.
         '''
+        logger.info('Functions: steady')
         self.functionMode = 'Steady'
         self.steadyGoal = goalPos
         self.resume()
@@ -164,6 +158,7 @@ class Functions(threading.Thread):
         '''
         Set the function mode to speech recognition processing.
         '''
+        logger.info('Functions: speech')
         self.functionMode = 'speechRecProcessing'
         self.resume()
 
@@ -171,40 +166,42 @@ class Functions(threading.Thread):
         '''
         Process the track line function.
         '''
+        logger.info('Functions: trackLineProcessing')
         pass
 
     def automaticProcessing(self):
         '''
         Process the automatic function.
         '''
-        print('automaticProcessing')
+        logger.info('Functions: automaticProcessing')
         pass
 
     def steadyProcessing(self):
         '''
         Process the steady function.
         '''
-        print('steadyProcessing')
+        logger.info('Functions: steadyProcessing')
         pass
 
     def speechRecProcessing(self):
         '''
         Process the speech recognition function.
         '''
-        print('speechRecProcessing')
+        logger.info('Functions: speechRecProcessing')
         pass
 
     def keepDisProcessing(self):
         '''
         Process the keep distance function.
         '''
-        print('keepDistanceProcessing')
+        logger.info('Functions: keepDisProcessing')
         pass
 
     def functionGoing(self):
         '''
         Execute the current function mode.
         '''
+        logger.info(f'Functions: functionGoing in {self.functionMode}')
         if self.functionMode == 'none':
             self.pause()
         elif self.functionMode == 'Automatic':
@@ -222,6 +219,7 @@ class Functions(threading.Thread):
         '''
         Run the function thread.
         '''
+        logger.info('Functions: run')
         while True:
             self.__flag.wait()
             self.functionGoing()

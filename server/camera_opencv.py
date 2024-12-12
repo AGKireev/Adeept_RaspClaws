@@ -13,6 +13,10 @@ import imutils
 import robotLight
 import RPIservo
 import move
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 led = robotLight.RobotLight()
 pid = PID.PID()
@@ -33,8 +37,8 @@ colorLower = np.array([24, 100, 100])
 class CVThread(threading.Thread):
 	font = cv2.FONT_HERSHEY_SIMPLEX
 
-	kalman_filter_X =  Kalman_filter.Kalman_filter(0.01,0.1)
-	kalman_filter_Y =  Kalman_filter.Kalman_filter(0.01,0.1)
+	kalman_filter_X = Kalman_filter.Kalman_filter(0.01,0.1)
+	kalman_filter_Y = Kalman_filter.Kalman_filter(0.01,0.1)
 	P_direction = -1
 	T_direction = 1
 	P_servo = 12
@@ -148,7 +152,7 @@ class CVThread(threading.Thread):
 		gray = cv2.GaussianBlur(gray, (21, 21), 0)
 
 		if self.avg is None:
-			print("[INFO] starting background model...")
+			logger.info("starting background model...")
 			self.avg = gray.copy().astype("float")
 			return 'background model'
 
@@ -163,7 +167,7 @@ class CVThread(threading.Thread):
 		self.cnts = cv2.findContours(self.thresh.copy(), cv2.RETR_EXTERNAL,
 			cv2.CHAIN_APPROX_SIMPLE)
 		self.cnts = imutils.grab_contours(self.cnts)
-		# print('x')
+		# logger.info('x')
 		# loop over the contours
 		for c in self.cnts:
 			# if the contour is too small, ignore it
@@ -176,8 +180,8 @@ class CVThread(threading.Thread):
 			self.drawing = 1
 			
 			self.motionCounter += 1
-			#print(motionCounter)
-			#print(text)
+			#logger.info(motionCounter)
+			#logger.info(text)
 			self.lastMovtionCaptured = timestamp
 			led.setColor(255,78,0)
 			led.both_off()
@@ -202,12 +206,12 @@ class CVThread(threading.Thread):
 			if posInput > (setCenter + findLineError):
 				#turnRight
 				move.commandInput('right')
-				print('right')
+				logger.info('CVThread: findLineCtrl right')
 				pass
 			elif posInput < (setCenter - findLineError):
 				#turnLeft
 				move.commandInput('left')
-				print('left')
+				logger.info('CVThread: findLineCtrl left')
 				pass
 			else:
 				move.commandInput('forward')
@@ -270,7 +274,7 @@ class CVThread(threading.Thread):
 			else:
 				CVThread.Y_lock = 1
 		else:
-			print('No servoPort %d assigned.'%ID)
+			logger.info(f"No servoPort {ID} assigned.")
 
 
 	def findColor(self, frame_image):
@@ -298,12 +302,12 @@ class CVThread(threading.Thread):
 				led.setColor(255,78,0)
 				led.both_off()
 				led.red()
-				print('locked')
+				logger.info('CVThread: findColor locked')
 			else:
 				led.setColor(0,78,255)
 				led.both_off()
 				led.blue()
-				print('unlocked')
+				logger.info('CVThread: findColor unlocked')
 		else:
 			self.findColorDetection = 0
 		self.pause()
@@ -370,10 +374,10 @@ class Camera(BaseCamera):
 
 		colorUpper = np.array([HUE_1, SAT_1, VAL_1])
 		colorLower = np.array([HUE_2, SAT_2, VAL_2])
-		print('HSV_1:%d %d %d'%(HUE_1, SAT_1, VAL_1))
-		print('HSV_2:%d %d %d'%(HUE_2, SAT_2, VAL_2))
-		print(colorUpper)
-		print(colorLower)
+		logger.info('Camera: HSV_1:%d %d %d'%(HUE_1, SAT_1, VAL_1))
+		logger.info('Camera: HSV_2:%d %d %d'%(HUE_2, SAT_2, VAL_2))
+		logger.info(f'Camera: colorUpper {colorUpper}')
+		logger.info(f'Camera: colorLower {colorLower}')
 
 	def modeSet(self, invar):
 		Camera.modeSelect = invar

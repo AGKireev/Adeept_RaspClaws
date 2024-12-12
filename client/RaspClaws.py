@@ -12,10 +12,13 @@ import zmq
 import base64
 import numpy as np
 from socket import *
-import sys
 import time
 import threading as thread
 import tkinter as tk
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 ip_stu=1		#Shows connection status
 c_f_stu = 0
@@ -324,7 +327,7 @@ def connection_thread():
 			funcMode = 0
 			all_btn_normal()
 
-		print(car_info)
+		logger.info(f"connection_thread: car_info: {car_info}")
 
 
 def Info_receive():
@@ -337,14 +340,14 @@ def Info_receive():
 	InfoSock.bind(ADDR)
 	InfoSock.listen(5)					  #Start server,waiting for client
 	InfoSock, addr = InfoSock.accept()
-	print('Info connected')
+	logger.info('Info_receive: Info connected')
 	while 1:
 		try:
 			info_data = ''
 			info_data = str(InfoSock.recv(BUFSIZ).decode())
 			info_get = info_data.split()
 			CPU_TEP,CPU_USE,RAM_USE= info_get
-			#print('cpu_tem:%s\ncpu_use:%s\nram_use:%s'%(CPU_TEP,CPU_USE,RAM_USE))
+			# logger.info('cpu_tem:%s\ncpu_use:%s\nram_use:%s'%(CPU_TEP,CPU_USE,RAM_USE))
 			CPU_TEP_lab.config(text='CPU Temp: %s℃'%CPU_TEP)
 			CPU_USE_lab.config(text='CPU Usage: %s'%CPU_USE)
 			RAM_lab.config(text='RAM Usage: %s'%RAM_USE)
@@ -372,11 +375,9 @@ def socket_connect():	 #Call this function to connect with the server
 	for i in range (1,6): #Try 5 times if disconnected
 		#try:
 		if ip_stu == 1:
-			print("Connecting to server @ %s:%d..." %(SERVER_IP, SERVER_PORT))
-			print("Connecting")
+			logger.info(f"socket_connect: Connecting to server @ {SERVER_IP}:{SERVER_PORT}...")
 			tcpClicSock.connect(ADDR)		#Connection with the server
-		
-			print("Connected")
+			logger.info("socket_connect: Connected")
 		
 			l_ip_5.config(text='IP:%s'%ip_adr)
 			l_ip_4.config(text='Connected')
@@ -402,10 +403,10 @@ def socket_connect():	 #Call this function to connect with the server
 
 			break
 		else:
-			print("Cannot connecting to server,try it latter!")
+			logger.info(f"socket_connect: Cannot connect to server @ {SERVER_IP}:{SERVER_PORT}, retry..")
 			l_ip_4.config(text='Try %d/5 time(s)'%i)
 			l_ip_4.config(bg='#EF6C00')
-			print('Try %d/5 time(s)'%i)
+			logger.info(f"socket_connect: Try {i}/5 time(s)")
 			ip_stu=1
 			time.sleep(1)
 			continue

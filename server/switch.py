@@ -6,8 +6,13 @@
 # Author      : William
 # Date        : 2018/08/22
 
-import RPi.GPIO as GPIO
 import time
+import logging
+import RPi.GPIO as GPIO
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 
 def switchSetup():
     GPIO.setwarnings(False)
@@ -39,7 +44,7 @@ def switch(port, status):
         else:
             pass
     else:
-        print('Wrong Command: Example--switch(3, 1)->to switch on port3')
+        logger.error('switch: Wrong Command: Example--switch(3, 1)->to switch on port3')
 
 def set_all_switch_off():
     switch(1,0)
@@ -53,10 +58,10 @@ if __name__ == '__main__':
             switch(1,1)
             switch(2,1)
             switch(3,1)
-            print("Light on....")
+            logger.info("switch: Light on....")
             time.sleep(1)
             set_all_switch_off()
-            print("Light off....")
+            logger.info("switch: Light off....")
             time.sleep(1)
     except:
         set_all_switch_off()

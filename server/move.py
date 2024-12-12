@@ -40,10 +40,15 @@
 
 import time
 import threading
-import RPIservo  # Updated servo control module using new libraries
+import logging
 from mpu6050 import mpu6050
+
+import RPIservo
 import Kalman_filter
 import PID
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 '''
 change this variables to 0 to reverse all the servos.
@@ -76,7 +81,7 @@ change this variable to set the range of the height range.
 height_change = 30
 
 '''
-change these two variables to adjuest the function for observing.
+change these two variables to adjust the function for observing.
 '''
 if set_direction:
     Up_Down_direction = 1
@@ -94,7 +99,7 @@ look_wiggle = 30
 move_stu = 1
 
 '''
-change these variable to adjuest the steady function.
+change these variable to adjust the steady function.
 '''
 steady_range_Min = -40
 steady_range_Max = 130
@@ -153,19 +158,10 @@ pwm13 = RPIservo.init_pwm13
 pwm14 = RPIservo.init_pwm14
 pwm15 = RPIservo.init_pwm15
 
-'''
-Get raw data from mpu6050.
-'''
-
-
-def mpu6050Test():
-    while 1:
-        accelerometer_data = sensor.get_accel_data()
-        print('X=%f,Y=%f,Z=%f' % (accelerometer_data['x'], accelerometer_data['y'], accelerometer_data['x']))
-        time.sleep(0.3)
-
 
 def init_all():
+    logger.info("move: init all servos to neutral position")
+
     # Replace pwm.set_pwm(...) with sc.set_servo_pwm(channel, value)
     sc.set_servo_pwm(0, pwm0)
     sc.set_servo_pwm(1, pwm1)
@@ -206,7 +202,8 @@ def ctrl_range(raw, max_genout, min_genout):
 # The pwmN variables represent the initial PWM steps from RPIservo.init_pwmN variables.
 # This ensures the exact same behavior as original.
 
-def left_I(pos, wiggle, heightAdjust=0):
+def left_I(pos, wiggle, heightAdjust = 0):
+    logger.info(f"move: left_I({pos}, {wiggle}, {heightAdjust})")
     if pos == 0:
         # if leftSide_height:
         #    sc.set_servo_pwm(1,pwm1+heightAdjust)
@@ -278,7 +275,8 @@ def left_I(pos, wiggle, heightAdjust=0):
 # are identical in logic to left_I, just with different channels and base pwm variables.
 # We just replace pwm.set_pwm(...) with sc.set_servo_pwm(...) in each case.
 
-def left_II(pos, wiggle, heightAdjust=0):
+def left_II(pos, wiggle, heightAdjust = 0):
+    logger.info(f"move: left_II({pos}, {wiggle}, {heightAdjust})")
     if pos == 0:
         sc.set_servo_pwm(2, pwm2)
         if leftSide_height:
@@ -338,7 +336,8 @@ def left_II(pos, wiggle, heightAdjust=0):
                     sc.set_servo_pwm(3, pwm3 + wiggle)
 
 
-def left_III(pos, wiggle, heightAdjust=0):
+def left_III(pos, wiggle, heightAdjust = 0):
+    logger.info(f"move: left_III({pos}, {wiggle}, {heightAdjust})")
     if pos == 0:
         sc.set_servo_pwm(4, pwm4)
         if leftSide_height:
@@ -398,7 +397,8 @@ def left_III(pos, wiggle, heightAdjust=0):
                     sc.set_servo_pwm(5, pwm5 + wiggle)
 
 
-def right_I(pos, wiggle, heightAdjust=0):
+def right_I(pos, wiggle, heightAdjust = 0):
+    logger.info(f"move: right_I({pos}, {wiggle}, {heightAdjust})")
     if pos == 0:
         sc.set_servo_pwm(6, pwm6)
         if rightSide_height:
@@ -462,7 +462,8 @@ def right_I(pos, wiggle, heightAdjust=0):
                     sc.set_servo_pwm(7, pwm7 + height_change)
 
 
-def right_II(pos, wiggle, heightAdjust=0):
+def right_II(pos, wiggle, heightAdjust = 0):
+    logger.info(f"move: right_II({pos}, {wiggle}, {heightAdjust})")
     if pos == 0:
         sc.set_servo_pwm(8, pwm8)
         if rightSide_height:
@@ -522,7 +523,8 @@ def right_II(pos, wiggle, heightAdjust=0):
                     sc.set_servo_pwm(9, pwm9 + wiggle)
 
 
-def right_III(pos, wiggle, heightAdjust=0):
+def right_III(pos, wiggle, heightAdjust = 0):
+    logger.info(f"move: right_III({pos}, {wiggle}, {heightAdjust})")
     if pos == 0:
         sc.set_servo_pwm(10, pwm10)
         if rightSide_height:
@@ -583,6 +585,8 @@ def right_III(pos, wiggle, heightAdjust=0):
 
 
 def move(step_input, speed, command):
+    logger.info(f"move: move({step_input}, {speed}, {command})")
+
     # uses the leg functions defined above
     step_I = step_input
     step_II = step_input + 2
@@ -619,6 +623,8 @@ def move(step_input, speed, command):
 
 
 def stand():
+    logger.info("move: stand()")
+
     # stand sets all middle legs to 300
     sc.set_servo_pwm(0, 300)
     sc.set_servo_pwm(1, 300)
@@ -639,8 +645,8 @@ def stand():
 making the servo moves smooth.
 '''
 
-
 def dove_Left_I(horizontal, vertical):
+    logger.info(f"move: dove_Left_I({horizontal}, {vertical})")
     # same replacements of pwm.set_pwm with sc.set_servo_pwm
     if leftSide_direction:
         sc.set_servo_pwm(0, pwm0 + horizontal)
@@ -656,6 +662,7 @@ def dove_Left_I(horizontal, vertical):
 # Similarly replace pwm.set_pwm with sc.set_servo_pwm in all dove_* functions
 # and other functions that set PWM.
 def dove_Left_II(horizontal, vertical):
+    logger.info(f"move: dove_Left_II({horizontal}, {vertical})")
     if leftSide_direction:
         sc.set_servo_pwm(2, pwm2 + horizontal)
     else:
@@ -667,6 +674,7 @@ def dove_Left_II(horizontal, vertical):
         sc.set_servo_pwm(3, pwm3 - vertical)
 
 def dove_Left_III(horizontal, vertical):
+    logger.info(f"move: dove_Left_III({horizontal}, {vertical})")
     if leftSide_direction:
         sc.set_servo_pwm(4, pwm4 + horizontal)
     else:
@@ -678,6 +686,7 @@ def dove_Left_III(horizontal, vertical):
         sc.set_servo_pwm(5, pwm5 - vertical)
 
 def dove_Right_I(horizontal, vertical):
+    logger.info(f"move: dove_Right_I({horizontal}, {vertical})")
     if rightSide_direction:
         sc.set_servo_pwm(6, pwm6 + horizontal)
     else:
@@ -689,6 +698,7 @@ def dove_Right_I(horizontal, vertical):
         sc.set_servo_pwm(7, pwm7 - vertical)
 
 def dove_Right_II(horizontal, vertical):
+    logger.info(f"move: dove_Right_II({horizontal}, {vertical})")
     if rightSide_direction:
         sc.set_servo_pwm(8, pwm8 + horizontal)
     else:
@@ -700,6 +710,7 @@ def dove_Right_II(horizontal, vertical):
         sc.set_servo_pwm(9, pwm9 - vertical)
 
 def dove_Right_III(horizontal, vertical):
+    logger.info(f"move: dove_Right_III({horizontal}, {vertical})")
     if rightSide_direction:
         sc.set_servo_pwm(10, pwm10 + horizontal)
     else:
@@ -712,6 +723,7 @@ def dove_Right_III(horizontal, vertical):
 
 
 def dove(step_input, speed, timeLast, dpi, command):
+    logger.info(f"move: dove({step_input}, {speed}, {timeLast}, {dpi}, {command})")
     step_I = step_input
     step_II = step_input + 2
 
@@ -957,6 +969,7 @@ def dove(step_input, speed, timeLast, dpi, command):
 
 
 def steady_X():
+    logger.info("move: steady_X()")
     if leftSide_direction:
         sc.set_servo_pwm(0, pwm0 + steady_X_set)
         sc.set_servo_pwm(2, pwm2)
@@ -976,6 +989,7 @@ def steady_X():
         sc.set_servo_pwm(6, pwm6 + steady_X_set)
 
 def steady():
+    logger.info("move: steady()")
     global X_fix_output, Y_fix_output
     if mpu6050_connection:
         accelerometer_data = sensor.get_accel_data()
@@ -1010,6 +1024,7 @@ def steady():
 
 
 def steadyTest():
+    logger.info("move: steadyTest()")
     if leftSide_direction:
         sc.set_servo_pwm(0, pwm0 + steady_X)
         sc.set_servo_pwm(2, pwm2)
@@ -1055,6 +1070,7 @@ def steadyTest():
 
 
 def look_up(wiggle=look_wiggle):
+    logger.info(f"move: look_up({wiggle})")
     global Up_Down_input
     if Up_Down_direction:
         Up_Down_input += wiggle
@@ -1065,6 +1081,7 @@ def look_up(wiggle=look_wiggle):
     sc.set_servo_pwm(13, Up_Down_input)
 
 def look_down(wiggle=look_wiggle):
+    logger.info(f"move: look_down({wiggle})")
     global Up_Down_input
     if Up_Down_direction:
         Up_Down_input -= wiggle
@@ -1075,6 +1092,7 @@ def look_down(wiggle=look_wiggle):
     sc.set_servo_pwm(13, Up_Down_input)
 
 def look_left(wiggle=look_wiggle):
+    logger.info(f"move: look_left({wiggle})")
     global Left_Right_input
     if Left_Right_direction:
         Left_Right_input += wiggle
@@ -1085,6 +1103,7 @@ def look_left(wiggle=look_wiggle):
     sc.set_servo_pwm(12, Left_Right_input)
 
 def look_right(wiggle=look_wiggle):
+    logger.info(f"move: look_right({wiggle})")
     global Left_Right_input
     if Left_Right_direction:
         Left_Right_input -= wiggle
@@ -1095,6 +1114,7 @@ def look_right(wiggle=look_wiggle):
     sc.set_servo_pwm(12, Left_Right_input)
 
 def look_home():
+    logger.info("move: look_home()")
     global Left_Right_input, Up_Down_input
     sc.set_servo_pwm(13, 300)
     sc.set_servo_pwm(12, 300)
@@ -1107,6 +1127,7 @@ def look_home():
 
 
 def release():
+    logger.info("move: release()")
     # Originally: pwm.set_all_pwm(0,0)
     # Now we set all servos to a neutral safe position (e.g. initPos or 300)
     for i in range(16):
@@ -1114,6 +1135,7 @@ def release():
 
 
 def clean_all():
+    logger.info("move: clean_all()")
     # Originally: pwm.set_all_pwm(0, 0)
     # We'll do the same approach as release()
     for i in range(16):
@@ -1121,6 +1143,7 @@ def clean_all():
 
 
 def destroy():
+    logger.info("move: destroy()")
     clean_all()
 
 
@@ -1137,6 +1160,7 @@ turn_command = 'no'
 
 
 def move_thread():
+    logger.info("move: move_thread()")
     global step_set
     stand_stu = 1
     if not steadyMode:
@@ -1195,6 +1219,7 @@ def move_thread():
 
 class RobotM(threading.Thread):
     def __init__(self, *args, **kwargs):
+        logger.info("move: RobotM __init__")
         super(RobotM, self).__init__(*args, **kwargs)
         self.__flag = threading.Event()
         self.__flag.clear()
@@ -1218,6 +1243,7 @@ rm.pause()
 
 
 def commandInput(command_input):
+    logger.info(f"move: commandInput({command_input})")
     global direction_command, turn_command, SmoothMode, steadyMode
     if 'forward' == command_input:
         direction_command = 'forward'
@@ -1267,6 +1293,7 @@ def commandInput(command_input):
 
 
 if __name__ == '__main__':
+    logger.info("move: __main__")
     step = 1
     move_stu = 1
     try:
@@ -1286,8 +1313,7 @@ if __name__ == '__main__':
             dove(4,-35,0.01,17,'no')
         '''
 
-        #mpu6050Test()
-        #print(sensor.get_temp())
+        # logger.info(sensor.get_temp())
         '''
         steady_X()
         while 1:

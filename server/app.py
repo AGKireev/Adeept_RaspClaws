@@ -13,13 +13,17 @@ class WebApp:
     def __init__(self):
         logger.info('WebApp: __init__')
         self.app = Flask(__name__)
+        
         logger.info('WebApp: CORS')
         CORS(self.app, supports_credentials=True)
+
         logger.info('WebApp: Camera')
         self.camera = Camera()
+
         logger.info('WebApp: Routes')
         self.dir_path = os.path.dirname(os.path.realpath(__file__))
         self.setup_routes()
+        
         logger.info('WebApp: __init__ done')
 
     def setup_routes(self):
@@ -57,8 +61,10 @@ class WebApp:
             return send_from_directory(self.dir_path + '/dist', 'index.html')
 
     def gen(self, camera):
+        # Generator function that yields video frames
         while True:
             frame = camera.get_frame()
+            # Yield a byte string that represents a single frame in MJPEG format
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
@@ -66,14 +72,18 @@ class WebApp:
         Camera.modeSelect = mode_input
 
     def color_find_set(self, h, s, v):
+        # Method to set the HSV color for object detection
         self.camera.color_find_set(h, s, v)
 
     def thread(self):
+        # Run the Flask app as a separate thread
         self.app.run(host='0.0.0.0', threaded=True)
 
     def start_thread(self):
         logger.info('WebApp: start_thread')
+
         fps_threading = threading.Thread(target=self.thread)
+        # Set daemon to False to prevent abrupt termination of the thread
         fps_threading.setDaemon(False)
         fps_threading.start()
         logger.info('WebApp: start_thread done')

@@ -1,13 +1,11 @@
-#!/usr/bin/env python3
-# File name   : servo.py
-# Description : Control lights
-# Author	  : William
-# Date		: 2019/02/23
 import time
-import RPi.GPIO as GPIO
-import sys
-from rpi_ws281x import *
 import threading
+import logging
+from rpi_ws281x import *
+import RPi.GPIO as GPIO
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class RobotLight(threading.Thread):
@@ -138,7 +136,7 @@ class RobotLight(threading.Thread):
 
     def setSomeColor(self, R, G, B, ID):
         color = Color(int(R),int(G),int(B))
-        #print(int(R),'  ',int(G),'  ',int(B))
+        # logger.info(int(R),'  ',int(G),'  ',int(B))
         for i in ID:
             self.strip.setPixelColor(i, color)
             self.strip.show()
@@ -235,7 +233,7 @@ class RobotLight(threading.Thread):
             else:
                 pass
         else:
-            print('Wrong Command: Example--switch(3, 1)->to switch on port3')
+            logger.info('Wrong Command: Example--switch(3, 1)->to switch on port3')
 
 
     def set_all_switch_off(self):

@@ -1,14 +1,7 @@
-#!/usr/bin/env python3
-# File name   : webServer.py
-# Production  : GWR
-# Website     : www.adeept.com
-# Author      : William
-# Date        : 2020/03/17
-
 # ======================================================================
 # IMPORTANT UPDATE NOTES FOR COMPATIBILITY WITH NEW LIBRARIES:
 #
-# This script (webServer.py, originally server.py) uses RPIservo.py, which we have already refactored
+# This script uses RPIservo.py, which was refactored
 # to use the new Adafruit CircuitPython libraries (adafruit_pca9685 and adafruit_motor.servo) instead
 # of the old RPi.GPIO and Adafruit_PCA9685 Python libraries. The underlying servo control logic in
 # RPIservo.py has been preserved to ensure the exact same functionality, ranges, and movement logic.
@@ -23,38 +16,33 @@
 # - This webServer.py script does not directly control the PWM or import old servo libraries anymore; it
 #   solely relies on RPIservo.py for servo actions. Therefore, we do not have to change logic here, only
 #   confirm that we are now using the updated RPIservo.py module.
-#
-# We also ensure that no changes in function names, logic, or comments occur, as requested.
-# All original comments and code structure remain intact.
 # ======================================================================
 
+# System libs
 import time
 import threading
-import move
 import os
+import socket
+import logging
+import asyncio
+import websockets
+import json
+
+# Custom modules
+import config
+import move
 import info
-import RPIservo    # Now uses new libraries internally, but interface unchanged.
+import RPIservo
 import functions
 import robotLight
 import switch
-import socket
-import logging
-
-# websocket related imports
-import asyncio
-import websockets
-
-import json
 from app import WebApp
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-logger.info('Starting server.py')
+logger.info('Starting..')
 
-OLED_connection = 0
-
-functionMode = 0
 speed_set = 100
 rad = 0.5
 turnWiggle = 60
@@ -73,53 +61,26 @@ T_sc.start()
 # modeSelect = 'none'
 modeSelect = 'PT'
 
-init_pwm0 = scGear.initPos[0]
-init_pwm1 = scGear.initPos[1]
-init_pwm2 = scGear.initPos[2]
-init_pwm3 = scGear.initPos[3]
-init_pwm4 = scGear.initPos[4]
-
-init_pwm = []
-for i in range(16):
-	init_pwm.append(scGear.initPos[i])
+init_pwms = scGear.initPos.copy()
 
 logger.info('Initializing functions')
-fuc = functions.Functions()
-fuc.start()
+functions.Functions().start()
 
-curpath = os.path.realpath(__file__)
-thisPath = "/" + os.path.dirname(curpath)
 
 def servoPosInit():
 	# This function sets initial servo positions using initConfig,
 	# which internally now uses the new servo library.
-	scGear.initConfig(2,init_pwm2,1)
-	P_sc.initConfig(1,init_pwm1,1)
-	T_sc.initConfig(0,init_pwm0,1)
+	scGear.initConfig(2, init_pwms[2], 1)
+	P_sc.initConfig(1, init_pwms[1], 1)
+	T_sc.initConfig(0, init_pwms[0], 1)
 
-def replace_num(initial,new_num):   #Call this function to replace data in 'RPIservo.py' file
-	global r
-	newline=""
-	str_num=str(new_num)
-	with open(thisPath+"/RPIservo.py","r") as f:
-		for line in f.readlines():
-			if line.find(initial) == 0:
-				line = initial+"%s" %(str_num+"\n")
-			newline += line
-	with open(thisPath+"/RPIservo.py","w") as f:
-		f.writelines(newline)
-
-def FPV_thread():
-	global fpv
-	fpv=FPV.FPV()
-	fpv.capture_thread(addr[0])
 
 def ap_thread():
 	os.system("sudo create_ap wlan0 eth0 Adeept_Robot 12345678")
 
 
 def functionSelect(command_input, response):
-	global direction_command, turn_command, SmoothMode, steadyMode, functionMode
+	global direction_command, turn_command, SmoothMode, steadyMode
 
 	# The logic remains unchanged.
 	# No direct servo control here, only mode switching.
@@ -237,86 +198,48 @@ def configPWM(command_input, response):
 	# Servo calibration through initConfig, still unchanged.
 	if 'SiLeft' in command_input:
 		numServo = int(command_input[7:])
-		init_pwm[numServo] = init_pwm[numServo] - 1
-		scGear.initConfig(numServo, init_pwm[numServo], 1)
+		init_pwms[numServo] = init_pwms[numServo] - 1
+		scGear.initConfig(numServo, init_pwms[numServo], 1)
 
 	if 'SiRight' in command_input:
 		numServo = int(command_input[7:])
-		init_pwm[numServo] = init_pwm[numServo] + 1
-		scGear.initConfig(numServo, init_pwm[numServo], 1)
+		init_pwms[numServo] = init_pwms[numServo] + 1
+		scGear.initConfig(numServo, init_pwms[numServo], 1)
 
 	if 'PWMMS' in command_input:
-		numServo = int(command_input[6:])
-		replace_num("init_pwm%d = "%numServo, init_pwm[numServo])
+		num_servo = int(command_input[6:])
+		config.write("pwm", f"init_pwm{num_servo}", init_pwms[num_servo])
 
 	if 'PWMINIT' == command_input:
 		for i in range(0,16):
-			scGear.initConfig(i, init_pwm[i], 1)
+			scGear.initConfig(i, init_pwms[i], 1)
 
 	if 'PWMD' in command_input:
-		for i in range(0,16):
-			init_pwm[i] = 300
-			replace_num("init_pwm%d = "%numServo, init_pwm[numServo])
+		reset_pwm = {}
+		for i in range(0, 16):
+			reset_pwm[f"init_pwm{i}"] = 300
+		config.write("pwm", None, reset_pwm)
 
-
-
-# def update_code():
-# 	# Updates code if not in production
-# 	projectPath = thisPath[:-7]
-# 	if os.path.exists(f'{projectPath}/config.json'):
-# 		with open(f'{projectPath}/config.json', 'r') as f1:
-# 			config = json.load(f1)
-# 			if not config['production']:
-# 				print('Update code')
-# 				os.system(f'cd {projectPath} && sudo git fetch --all && git reset --hard origin/master && git pull')
-# 				config['production'] = True
-# 				with open(f'{projectPath}/config.json', 'w') as f2:
-# 					json.dump(config, f2)
 
 def wifi_check():
 	logger.info('Checking wifi')
-	# Checks wifi and starts AP if needed, no servo logic here.
 	try:
-		s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		s.connect(("1.1.1.1",80))
-		ipaddr_check=s.getsockname()[0]
+		ipaddr_check = s.getsockname()[0]
 		s.close()
-		# print(ipaddr_check)
 		logger.info(f'IP: {ipaddr_check}')
-		# update_code()
-		if OLED_connection:
-			screen.screen_show(2, 'IP:'+ipaddr_check)
-			screen.screen_show(3, 'AP MODE OFF')
 	except:
+		logger.warning('No wifi, starting AP..')
 		ap_threading=threading.Thread(target=ap_thread)
 		ap_threading.daemon = True
 		ap_threading.start()
-		if OLED_connection:
-			screen.screen_show(2, 'AP Starting 10%')
-		RL.setColor(0,16,50)
-		time.sleep(1)
-		if OLED_connection:
-			screen.screen_show(2, 'AP Starting 30%')
-		RL.setColor(0,16,100)
-		time.sleep(1)
-		if OLED_connection:
-			screen.screen_show(2, 'AP Starting 50%')
-		RL.setColor(0,16,150)
-		time.sleep(1)
-		if OLED_connection:
-			screen.screen_show(2, 'AP Starting 70%')
-		RL.setColor(0,16,200)
-		time.sleep(1)
-		if OLED_connection:
-			screen.screen_show(2, 'AP Starting 90%')
-		RL.setColor(0,16,255)
-		time.sleep(1)
-		if OLED_connection:
-			screen.screen_show(2, 'AP Starting 100%')
-		RL.setColor(35,255,35)
-		if OLED_connection:
-			screen.screen_show(2, 'IP:192.168.12.1')
-			screen.screen_show(3, 'AP MODE ON')
+		for intensity in range(50, 256, 50):
+			RL.setColor(0, 16, intensity)
+			time.sleep(1)
+		RL.setColor(35, 255, 35)
+		logger.info('AP started')
+
 
 async def check_permit(websocket):
 	# User authentication over websocket
@@ -333,8 +256,8 @@ async def check_permit(websocket):
 
 async def recv_msg(websocket):
 	global speed_set, modeSelect
-	direction_command = 'no'
-	turn_command = 'no'
+	# direction_command = 'no'
+	# turn_command = 'no'
 
 	# Communication loop with client
 	while True:
@@ -348,14 +271,13 @@ async def recv_msg(websocket):
 		try:
 			data = json.loads(data)
 		except Exception as e:
-			# print('not A JSON')
 			logger.error(f'Not a JSON: {data}')
 
 		if not data:
 			continue
 
 		# Depending on the received data, call the respective functions as before
-		if isinstance(data,str):
+		if isinstance(data, str):
 			robotCtrl(data, response)
 			switchCtrl(data, response)
 			functionSelect(data, response)
@@ -363,7 +285,7 @@ async def recv_msg(websocket):
 
 			if 'get_info' == data:
 				response['title'] = 'get_info'
-				response['data'] = [info.get_cpu_tempfunc(), info.get_cpu_use(), info.get_ram_info()]
+				response['data'] = [info.get_cpu_temp(), info.get_cpu_use(), info.get_ram_info()]
 
 			if 'wsB' in data:
 				try:
@@ -375,18 +297,10 @@ async def recv_msg(websocket):
 			elif 'AR' == data:
 				modeSelect = 'AR'
 				screen.screen_show(4, 'ARM MODE ON')
-				try:
-					fpv.changeMode('ARM MODE ON')
-				except:
-					pass
 
 			elif 'PT' == data:
 				modeSelect = 'PT'
 				screen.screen_show(4, 'PT MODE ON')
-				try:
-					fpv.changeMode('PT MODE ON')
-				except:
-					pass
 
 			#CVFL
 			elif 'CVFL' == data:
@@ -408,19 +322,13 @@ async def recv_msg(websocket):
 				err = int(data.split()[1])
 				flask_app.camera.errorSet(err)
 
-			elif 'defEC' in data:#Z
-				fpv.defaultExpCom()
+			# elif 'defEC' in data:
+			# 	fpv.defaultExpCom()
 
 		elif isinstance(data, dict):
 			if data['title'] == "findColorSet":
 				color = data['data']
 				flask_app.color_find_set(color[0],color[1],color[2])
-
-		if not functionMode:
-			if OLED_connection:
-				screen.screen_show(5,'Functions OFF')
-		else:
-			pass
 
 		logger.info(f'Received data: {data}')
 		response = json.dumps(response)

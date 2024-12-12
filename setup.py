@@ -3,6 +3,8 @@
 # Author      : Adeept
 # Date        : 2020/3/14
 
+# TODO: Requires full refactoring, switch to requirements.txt, etc.
+
 import os
 import time
 

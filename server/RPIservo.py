@@ -4,11 +4,14 @@
 # Author      : William
 # Date        : 2019/02/23
 
-from __future__ import division
+# from __future__ import division
 import time
-import sys
 import threading
 import random
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # ======================================================================
 # IMPORTANT UPDATE NOTES:
@@ -56,6 +59,8 @@ from board import SCL, SDA
 import adafruit_pca9685
 from adafruit_motor import servo
 
+import config
+
 # We do not need RPi.GPIO or the legacy Adafruit_PCA9685 Python library anymore.
 # They are replaced by the Adafruit CircuitPython PCA9685 and servo libraries.
 
@@ -80,43 +85,23 @@ servos = {}
 for i in range(16):
     servos[i] = servo.Servo(pca.channels[i], min_pulse=min_pulse_us, max_pulse=max_pulse_us)
 
-# Original initial positions and arrays
-init_pwm0 = 300
-init_pwm1 = 300
-init_pwm2 = 300
-init_pwm3 = 300
+pwm_config = config.read("pwm")
 
-init_pwm4 = 300
-init_pwm5 = 300
-init_pwm6 = 300
-init_pwm7 = 300
-
-init_pwm8 = 300
-init_pwm9 = 300
-init_pwm10 = 300
-init_pwm11 = 300
-
-init_pwm12 = 300
-init_pwm13 = 300
-init_pwm14 = 300
-init_pwm15 = 300
+# init_pwm1 = 300
+# ..
+# init_pwm15 = 300
 
 class ServoCtrl(threading.Thread):
     def __init__(self, *args, **kwargs):
         # Keeping all original arrays and logic unchanged
         self.sc_direction = [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1]
-        self.initPos = [init_pwm0,init_pwm1,init_pwm2,init_pwm3,
-                        init_pwm4,init_pwm5,init_pwm6,init_pwm7,
-                        init_pwm8,init_pwm9,init_pwm10,init_pwm11,
-                        init_pwm12,init_pwm13,init_pwm14,init_pwm15]
-        self.goalPos = [300,300,300,300, 300,300,300,300 ,300,300,300,300 ,300,300,300,300]
-        self.nowPos  = [300,300,300,300, 300,300,300,300 ,300,300,300,300 ,300,300,300,300]
-        self.bufferPos  = [300.0,300.0,300.0,300.0, 300.0,300.0,300.0,300.0 ,300.0,300.0,300.0,300.0 ,300.0,300.0,300.0,300.0]
-        self.lastPos = [300,300,300,300, 300,300,300,300 ,300,300,300,300 ,300,300,300,300]
-        self.ingGoal = [300,300,300,300, 300,300,300,300 ,300,300,300,300 ,300,300,300,300]
+        self.initPos = [pwm_config['init_pwm{}'.format(i)] for i in range(16)]
+        self.goalPos = [300,300,300,300, 300,300,300,300 ,300,300,300,300, 300,300,300,300]
+        self.nowPos  = [300,300,300,300, 300,300,300,300 ,300,300,300,300, 300,300,300,300]
+        self.bufferPos  = [300.0,300.0,300.0,300.0, 300.0,300.0,300.0,300.0, 300.0,300.0,300.0,300.0 ,300.0,300.0,300.0,300.0]
+        self.lastPos = [300,300,300,300, 300,300,300,300 ,300,300,300,300, 300,300,300,300]
+        self.ingGoal = [300,300,300,300, 300,300,300,300 ,300,300,300,300, 300,300,300,300]
 
-        # NOTE: The original code changed maxPos to 520 from 560.
-        # We must keep it exactly the same to maintain correct angle mapping.
         self.maxPos  = [520,520,520,520, 520,520,520,520 ,520,520,520,520 ,520,520,520,520]
         self.minPos  = [100,100,100,100, 100,100,100,100 ,100,100,100,100 ,100,100,100,100]
         self.scSpeed = [0,0,0,0, 0,0,0,0 ,0,0,0,0 ,0,0,0,0]
@@ -145,12 +130,12 @@ class ServoCtrl(threading.Thread):
 
     def pause(self):
         # Keep original function and comment
-        print('......................pause..........................')
+        logger('ServoCtrl: pause..')
         self.__flag.clear()
 
     def resume(self):
         # Keep original function and comment
-        print('resume')
+        logger('ServoCtrl: resume..')
         self.__flag.set()
 
 
@@ -189,7 +174,7 @@ class ServoCtrl(threading.Thread):
                 # replaced: pwm.set_pwm(ID,0,self.initPos[ID])
                 self.set_servo_pwm(ID, self.initPos[ID])
         else:
-            print('initPos Value Error.')
+            logger.error(f"ServoCtrl: initConfig: Invalid initInput {initInput} for servo {ID}")
 
     def moveServoInit(self, ID):
         # Move selected servos to their initPos
@@ -390,11 +375,11 @@ if __name__ == '__main__':
         '''
         delaytime = 5
         sc.certSpeed([0,7], [60,0], [40,60])
-        print('xx1xx')
+        logger.info('ServoCtrl: xx1xx')
         time.sleep(delaytime)
 
         sc.certSpeed([0,7], [0,60], [40,60])
-        print('xx2xx')
+        logger.info('ServoCtrl: xx2xx')
         time.sleep(delaytime+2)
 
         # sc.moveServoInit([0])

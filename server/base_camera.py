@@ -1,25 +1,23 @@
 import time
 import threading
-import cv2
-try:
-    from greenlet import getcurrent as get_ident
-except ImportError:
-    try:
-        from thread import get_ident
-    except ImportError:
-        from _thread import get_ident
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class CameraEvent(object):
     """An Event-like class that signals all active clients when a new frame is
     available.
     """
+
     def __init__(self):
+        # Dictionary of client events; keys are thread identifiers
         self.events = {}
 
     def wait(self, timeout=None):
         """Invoked from each client's thread to wait for the next frame."""
-        ident = get_ident()
+        ident = threading.get_ident()
         if ident not in self.events:
             # this is a new client
             # add an entry for it in the self.events dict
@@ -49,10 +47,12 @@ class CameraEvent(object):
 
     def clear(self):
         """Invoked from each client's thread after a frame was processed."""
-        self.events[get_ident()][0].clear()
+        self.events[threading.get_ident()][0].clear()
 
 
 class BaseCamera(object):
+    """An abstract base class for camera implementations."""
+
     thread = None  # background thread that reads frames from camera
     frame = None  # current frame is stored here by background thread
     last_access = 0  # time of last client access to the camera
@@ -61,6 +61,7 @@ class BaseCamera(object):
     def __init__(self, timeout=10):
         """Start the background camera thread if it isn't running yet."""
         if BaseCamera.thread is None:
+            logger.info("BaseCamera: init")
             BaseCamera.last_access = time.time()
 
             # start background frame thread
@@ -72,10 +73,11 @@ class BaseCamera(object):
                 start_time = time.time()
                 while self.get_frame(timeout=timeout) is None:
                     if time.time() - start_time > timeout:
-                        raise RuntimeError("Could not start camera.")
+                        logger.error("BaseCamera: could not start camera")
+                        raise RuntimeError("BaseCamera: could not start camera")
                     time.sleep(0)
             except Exception as e:
-                print(f"Error initializing camera: {e}")
+                logger.error(f"BaseCamera: Error initializing camera: {e}")
                 BaseCamera.thread = None
 
     def get_frame(self, timeout=None):
@@ -92,12 +94,12 @@ class BaseCamera(object):
     @staticmethod
     def frames():
         """"Generator that returns frames from the camera."""
-        raise RuntimeError('Must be implemented by subclasses.')
+        raise NotImplementedError('BaseCamera: Must be implemented by subclasses.')
 
     @classmethod
     def _thread(cls):
         """Camera background thread."""
-        print('Starting camera thread.')
+        logger.info('BaseCamera: Starting camera thread.')
         try:
             frames_iterator = cls.frames()
             for frame in frames_iterator:
@@ -109,9 +111,9 @@ class BaseCamera(object):
                 # the last 10 seconds then stop the thread
                 if time.time() - BaseCamera.last_access > 10:
                     frames_iterator.close()
-                    print('Stopping camera thread due to inactivity.')
+                    logger.warning('BaseCamera: Stopping camera thread due to inactivity.')
                     break
         except Exception as e:
-            print(f"Error in camera thread: {e}")
+            logger.exception(f"Error in camera thread: {e}")
         finally:
             BaseCamera.thread = None

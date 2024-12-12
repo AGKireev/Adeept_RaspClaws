@@ -8,18 +8,23 @@
 # Date		: 2023/06/14
 
 from socket import *
-import sys
 import time
 import threading as thread
 import tkinter as tk
+import logging
 
-try:#1
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+
+try:
 	import cv2
 	import zmq
 	import base64
 	import numpy as np
 except:
-	print("Couldn't import OpenCV, you need to install it first.")
+	logger.error("GUI: Couldn't import OpenCV")
+
 
 ip_stu=1		#Shows connection status
 c_f_stu = 0
@@ -72,7 +77,7 @@ def opencv_r():
 			# try:
 			frame = footage_socket.recv_string()
 			# except Exception as e:
-			# 	print(e)
+			# 	logger.error(e)
 
 			img = base64.b64decode(frame)
 			npimg = np.frombuffer(img, dtype=np.uint8)
@@ -343,7 +348,7 @@ def connection_thread():
 			funcMode = 0
 			all_btn_normal()
 
-		print(car_info)
+		logger.info(f"GUI: Received: {car_info}")
 
 
 def Info_receive():
@@ -356,14 +361,14 @@ def Info_receive():
 	InfoSock.bind(ADDR)
 	InfoSock.listen(5)					  #Start server,waiting for client
 	InfoSock, addr = InfoSock.accept()
-	print('Info connected')
+	logger.info("Info_receive: Info connected")
 	while 1:
 		try:
 			info_data = ''
 			info_data = str(InfoSock.recv(BUFSIZ).decode())
 			info_get = info_data.split()
 			CPU_TEP,CPU_USE,RAM_USE= info_get
-			#print('cpu_tem:%s\ncpu_use:%s\nram_use:%s'%(CPU_TEP,CPU_USE,RAM_USE))
+			# logger.info('cpu_tem:%s\ncpu_use:%s\nram_use:%s'%(CPU_TEP,CPU_USE,RAM_USE))
 			CPU_TEP_lab.config(text='CPU Temp: %s℃'%CPU_TEP)
 			CPU_USE_lab.config(text='CPU Usage: %s'%CPU_USE)
 			RAM_lab.config(text='RAM Usage: %s'%RAM_USE)
@@ -391,11 +396,9 @@ def socket_connect():	 #Call this function to connect with the server
 	for i in range (1,6): #Try 5 times if disconnected
 		#try:
 		if ip_stu == 1:
-			print("Connecting to server @ %s:%d..." %(SERVER_IP, SERVER_PORT))
-			print("Connecting")
+			logger.info(f"GUI: Connecting to server @ {SERVER_IP}:{SERVER_PORT}...")
 			tcpClicSock.connect(ADDR)		#Connection with the server
-		
-			print("Connected")
+			logger.info(f"GUI: Connected to server @ {SERVER_IP}:{SERVER_PORT}")
 		
 			l_ip_5.config(text='IP:%s'%ip_adr)
 			l_ip_4.config(text='Connected')
@@ -426,10 +429,10 @@ def socket_connect():	 #Call this function to connect with the server
 
 			break
 		else:
-			print("Cannot connecting to server,try it latter!")
+			logger.error(f"GUI: Couldn't connect to server @ {SERVER_IP}:{SERVER_PORT}, retry..")
 			l_ip_4.config(text='Try %d/5 time(s)'%i)
 			l_ip_4.config(bg='#EF6C00')
-			print('Try %d/5 time(s)'%i)
+			logger.info(f"GUI: Try {i}/5 time(s)")
 			ip_stu=1
 			time.sleep(1)
 			continue
