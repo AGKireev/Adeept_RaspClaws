@@ -130,12 +130,12 @@ class ServoCtrl(threading.Thread):
 
     def pause(self):
         # Keep original function and comment
-        logger('ServoCtrl: pause..')
+        logger.info('ServoCtrl: pause..')
         self.__flag.clear()
 
     def resume(self):
         # Keep original function and comment
-        logger('ServoCtrl: resume..')
+        logger.info('ServoCtrl: resume..')
         self.__flag.set()
 
 

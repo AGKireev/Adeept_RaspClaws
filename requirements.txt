@@ -12,3 +12,6 @@ imutils
 zmq
 pybase64
 psutil
+smbus
+adafruit-blinka
+adafruit-circuitpython-pca9685
