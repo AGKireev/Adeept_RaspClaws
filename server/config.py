@@ -3,7 +3,7 @@ import json
 import threading
 
 this_path = os.path.dirname(os.path.realpath(__file__))
-config_file = os.path.join(this_path, "config.json")
+config_file = os.path.join(this_path, "../config.json")
 
 config_lock = threading.RLock()
 
