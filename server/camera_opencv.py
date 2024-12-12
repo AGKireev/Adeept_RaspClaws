@@ -1,7 +1,6 @@
 import os
 import cv2
 from base_camera import BaseCamera
-import RPIservo
 import numpy as np
 import switch
 import datetime

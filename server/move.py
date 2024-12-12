@@ -139,24 +139,26 @@ target_Y = 0
 # Create a servo control instance from RPIservo. This replaces direct Adafruit_PCA9685 usage.
 sc = RPIservo.ServoCtrl()
 
+init_pwms = sc.initPos.copy()
+
 # The following lines read initial PWM values from RPIservo.
 # RPIservo still defines init_pwm0...init_pwm15 = 300 as before.
-pwm0 = RPIservo.init_pwm0
-pwm1 = RPIservo.init_pwm1
-pwm2 = RPIservo.init_pwm2
-pwm3 = RPIservo.init_pwm3
-pwm4 = RPIservo.init_pwm4
-pwm5 = RPIservo.init_pwm5
-pwm6 = RPIservo.init_pwm6
-pwm7 = RPIservo.init_pwm7
-pwm8 = RPIservo.init_pwm8
-pwm9 = RPIservo.init_pwm9
-pwm10 = RPIservo.init_pwm10
-pwm11 = RPIservo.init_pwm11
-pwm12 = RPIservo.init_pwm12
-pwm13 = RPIservo.init_pwm13
-pwm14 = RPIservo.init_pwm14
-pwm15 = RPIservo.init_pwm15
+pwm0 = init_pwms[0]
+pwm1 = init_pwms[1]
+pwm2 = init_pwms[2]
+pwm3 = init_pwms[3]
+pwm4 = init_pwms[4]
+pwm5 = init_pwms[5]
+pwm6 = init_pwms[6]
+pwm7 = init_pwms[7]
+pwm8 = init_pwms[8]
+pwm9 = init_pwms[9]
+pwm10 = init_pwms[10]
+pwm11 = init_pwms[11]
+pwm12 = init_pwms[12]
+pwm13 = init_pwms[13]
+pwm14 = init_pwms[14]
+pwm15 = init_pwms[15]
 
 
 def init_all():
