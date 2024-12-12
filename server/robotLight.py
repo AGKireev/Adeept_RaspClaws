@@ -1,7 +1,7 @@
 import time
 import threading
 import logging
-from rpi_ws281x import *
+import rpi_ws281x
 import RPi.GPIO as GPIO
 
 logging.basicConfig(level=logging.INFO)
@@ -50,7 +50,7 @@ class RobotLight(threading.Thread):
         GPIO.setup(self.right_B, GPIO.OUT)
 
         # Create NeoPixel object with appropriate configuration.
-        self.strip = Adafruit_NeoPixel(self.LED_COUNT, self.LED_PIN, self.LED_FREQ_HZ, self.LED_DMA, self.LED_INVERT, self.LED_BRIGHTNESS, self.LED_CHANNEL)
+        self.strip = rpi_ws281x.Adafruit_NeoPixel(self.LED_COUNT, self.LED_PIN)  # , self.LED_FREQ_HZ, self.LED_DMA, self.LED_INVERT, self.LED_BRIGHTNESS, self.LED_CHANNEL
         # Intialize the library (must be called once before other functions).
         self.strip.begin()
 
