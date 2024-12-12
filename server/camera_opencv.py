@@ -422,7 +422,10 @@ class Camera(BaseCamera):
 
 		while True:
 			# read current frame
-			_, img = camera.read()
+			# _, img = camera.read()
+
+			for _ in range(10):  # Read 10 frames to allow the camera to stabilize
+				_, img = camera.read()
 
 			if img is None:
 				raise RuntimeError('Could not read frame.')
