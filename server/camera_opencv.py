@@ -341,7 +341,7 @@ class CVThread(threading.Thread):
 
 
 class Camera(BaseCamera):
-	video_source = 0
+	video_source = 4
 	modeSelect = 'none'
 	# modeSelect = 'findlineCV'
 	# modeSelect = 'findColor'
@@ -411,6 +411,8 @@ class Camera(BaseCamera):
 
 	@staticmethod
 	def frames():
+		logger.info(f"Camera source: {Camera.video_source}")
+
 		camera = cv2.VideoCapture(Camera.video_source)
 		if not camera.isOpened():
 			raise RuntimeError('Could not start camera.')
@@ -421,6 +423,10 @@ class Camera(BaseCamera):
 		while True:
 			# read current frame
 			_, img = camera.read()
+
+			if img is None:
+				raise RuntimeError('Could not read frame.')
+
 			if img.all is None:
 				continue
 
