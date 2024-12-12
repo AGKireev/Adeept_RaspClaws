@@ -414,6 +414,8 @@ class Camera(BaseCamera):
 		logger.info(f"Camera source: {Camera.video_source}")
 
 		camera = cv2.VideoCapture(Camera.video_source)
+		logger.info(f"Camera: {camera}")
+		logger.info(f"Camera.isOpened: {camera.isOpened()}")
 		if not camera.isOpened():
 			raise RuntimeError('Could not start camera.')
 
@@ -426,6 +428,8 @@ class Camera(BaseCamera):
 
 			for _ in range(10):  # Read 10 frames to allow the camera to stabilize
 				_, img = camera.read()
+				logger.info(f"Camera: {img}")
+				time.sleep(1)
 
 			if img is None:
 				raise RuntimeError('Could not read frame.')
