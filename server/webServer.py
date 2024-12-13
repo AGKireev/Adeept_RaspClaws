@@ -339,6 +339,14 @@ async def main_logic(websocket, path):
 	await check_permit(websocket)
 	await recv_msg(websocket)
 
+def start_websocket_server():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    start_server = websockets.serve(main_logic, '0.0.0.0', 8888)
+    loop.run_until_complete(start_server)
+    logger.info('WebSocket server started on port 8888')
+    loop.run_forever()
+
 if __name__ == '__main__':
 	logger.info('Starting main loop')
 	switch.switchSetup()
@@ -364,41 +372,46 @@ if __name__ == '__main__':
 	flask_app = WebApp()
 	flask_app.start_thread()
 
-	loop = asyncio.get_event_loop()
+	# loop = asyncio.get_event_loop()
 
-	while 1:
-		wifi_check()
-		try:
-			# Start websocket server
-			logger.info('Starting websocket server')
-			start_server = websockets.serve(main_logic, '0.0.0.0', 8888)
-			loop.run_until_complete(start_server)
-			logger.info('Server started, waiting for connection...')
-			break
-		except Exception as e:
-			logger.error(f'Loop Exception: {e}')
-			if RL:
-				RL.setColor(0,0,0)
+	# while 1:
+	# 	wifi_check()
+	# 	try:
+	# 		# Start websocket server
+	# 		logger.info('Starting websocket server')
+	# 		start_server = websockets.serve(main_logic, '0.0.0.0', 8888)
+	# 		loop.run_until_complete(start_server)
+	# 		logger.info('Server started, waiting for connection...')
+	# 		break
+	# 	except Exception as e:
+	# 		logger.error(f'Loop Exception: {e}')
+	# 		if RL:
+	# 			RL.setColor(0,0,0)
 
-		try:
-			if RL:
-				RL.setColor(0,80,255)
-		except:
-			pass
+	# 	try:
+	# 		if RL:
+	# 			RL.setColor(0,80,255)
+	# 	except:
+	# 		pass
 
+	# # try:
+	# # 	asyncio.get_event_loop().run_forever()
+	# # except Exception as e:
+	# # 	logger.error(f'Asyncio Exception: {e}')
+	# # 	if RL:
+	# # 		RL.setColor(0,0,0)
+	# # 	move.destroy()
+	# # Run the event loop
 	# try:
-	# 	asyncio.get_event_loop().run_forever()
+	# 	loop.run_forever()
 	# except Exception as e:
 	# 	logger.error(f'Asyncio Exception: {e}')
 	# 	if RL:
-	# 		RL.setColor(0,0,0)
+	# 		RL.setColor(0, 0, 0)
 	# 	move.destroy()
-	# Run the event loop
-	try:
-		loop.run_forever()
-	except Exception as e:
-		logger.error(f'Asyncio Exception: {e}')
-		if RL:
-			RL.setColor(0, 0, 0)
-		move.destroy()
+
+	# Start the WebSocket server in a new thread
+	websocket_thread = threading.Thread(target=start_websocket_server)
+	websocket_thread.start()
+
 
