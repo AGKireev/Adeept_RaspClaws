@@ -5,7 +5,7 @@ import threading
 import logging
 from camera_opencv import Camera
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

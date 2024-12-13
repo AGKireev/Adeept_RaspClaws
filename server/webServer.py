@@ -38,8 +38,9 @@ import robotLight
 import switch
 from app import WebApp
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+# logging.getLogger('websockets').setLevel(logging.INFO)
 
 logger.info('Starting..')
 
@@ -334,7 +335,7 @@ async def recv_msg(websocket):
 		response = json.dumps(response)
 		await websocket.send(response)
 
-async def main_logic(websocket, path):
+async def main_logic(websocket):
 	logger.info('main_logic')
 	await check_permit(websocket)
 	await recv_msg(websocket)

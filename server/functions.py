@@ -7,7 +7,7 @@ import config
 import Kalman_filter
 import RPIservo
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 logger.info('Functions: starting..')

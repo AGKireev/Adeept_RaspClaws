@@ -15,10 +15,10 @@ import move
 import logging
 from picamera2 import Picamera2
 
-os.environ["LIBCAMERA_LOG_LEVELS"] = "2"
-logging.getLogger('picamera2').setLevel(logging.INFO)
+# os.environ["LIBCAMERA_LOG_LEVELS"] = "2"
+# logging.getLogger('picamera2').setLevel(logging.INFO)
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 led = robotLight.RobotLight()

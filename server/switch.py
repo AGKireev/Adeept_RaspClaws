@@ -10,7 +10,7 @@ import time
 import logging
 import RPi.GPIO as GPIO
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

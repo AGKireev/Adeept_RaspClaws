@@ -47,7 +47,7 @@ import RPIservo
 import Kalman_filter
 import PID
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 '''
