@@ -133,6 +133,11 @@ except:
 	pass
 
 # TODO: Add
+# Camera libcamera was set according to:
+# https://pidoc.cn/docs/computers/camera-software#%E6%9E%84%E5%BB%BA-rpicam-apps
+# from post: https://forums.raspberrypi.com/viewtopic.php?t=368813
+# SAME: https://www.raspberrypi.com/documentation/computers/camera_software.html#building-libcamera-and-rpicam-apps
+# ALTERNATIVE:
 # sudo apt install -y python3-picamera2 libopencv-dev
 # sudo apt install -y libcap-dev
 # sudo apt-get install rpicam-apps
@@ -141,6 +146,7 @@ except:
 # sudo apt install libcamera-dev
 # sudo apt install libkms++-dev libfmt-dev libdrm-dev
 # pip install rpi-libcamera rpi-kms picamera2
+# https://www.raspberrypi.com/documentation/computers/camera_software.html#building-rpicam-apps
 
 os.system('sudo chmod 777 //home/pi/startup.sh')
 
