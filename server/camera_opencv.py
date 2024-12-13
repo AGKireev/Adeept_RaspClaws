@@ -356,9 +356,9 @@ class Camera(BaseCamera):
 		# 	Camera.set_video_source(int(os.environ['OPENCV_CAMERA_SOURCE']))
 		# super(Camera, self).__init__()
 		super(Camera, self).__init__()
-		self.picam2 = Picamera2()
-		self.picam2.configure(self.picam2.create_preview_configuration(main={"size": (640, 480)}))
-		self.picam2.start()
+		# self.picam2 = Picamera2()
+		# self.picam2.configure(self.picam2.create_preview_configuration(main={"size": (640, 480)}))
+		# self.picam2.start()
 
 
 	def color_find_set(self, invarH, invarS, invarV):
