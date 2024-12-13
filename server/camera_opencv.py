@@ -15,7 +15,7 @@ import move
 import logging
 from picamera2 import Picamera2
 
-os.environ["LIBCAMERA_LOG_LEVELS"] = "2"
+os.environ["LIBCAMERA_LOG_LEVELS"] = "3"
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
