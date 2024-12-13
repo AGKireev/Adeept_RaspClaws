@@ -364,14 +364,16 @@ if __name__ == '__main__':
 	flask_app = WebApp()
 	flask_app.start_thread()
 
+	loop = asyncio.get_event_loop()
+
 	while 1:
 		wifi_check()
 		try:
 			# Start websocket server
 			logger.info('Starting websocket server')
 			start_server = websockets.serve(main_logic, '0.0.0.0', 8888)
-			asyncio.get_event_loop().run_until_complete(start_server)
-			logger.info('waiting for connection...')
+			loop.run_until_complete(start_server)
+			logger.info('Server started, waiting for connection...')
 			break
 		except Exception as e:
 			logger.error(f'Loop Exception: {e}')
@@ -384,10 +386,19 @@ if __name__ == '__main__':
 		except:
 			pass
 
+	# try:
+	# 	asyncio.get_event_loop().run_forever()
+	# except Exception as e:
+	# 	logger.error(f'Asyncio Exception: {e}')
+	# 	if RL:
+	# 		RL.setColor(0,0,0)
+	# 	move.destroy()
+	# Run the event loop
 	try:
-		asyncio.get_event_loop().run_forever()
+		loop.run_forever()
 	except Exception as e:
 		logger.error(f'Asyncio Exception: {e}')
 		if RL:
-			RL.setColor(0,0,0)
+			RL.setColor(0, 0, 0)
 		move.destroy()
+
