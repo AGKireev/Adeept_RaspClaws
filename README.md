@@ -2,6 +2,7 @@
 Build was tested on:
 Adeept RaspClaws
 Raspberry Pi 5 8Gb
+Camera Module 3 (IMX708)
 Python 3.11
 
 # How to set env
@@ -46,6 +47,7 @@ sudo dtoverlay -d . rp1_ws281x_pwm
 sudo pinctrl set 12 a0 pn
 sudo apt install cmake -y
 cmake --version
+cd ..
 cmake .
 make
 pip uninstall rpi_ws281x -y

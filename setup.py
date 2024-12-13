@@ -134,6 +134,13 @@ except:
 
 # TODO: Add
 # sudo apt install -y python3-picamera2 libopencv-dev
+# sudo apt install -y libcap-dev
+# sudo apt-get install rpicam-apps
+# sudo apt update && sudo apt upgrade
+# sudo apt install libcap-dev libatlas-base-dev ffmpeg libopenjp2-7
+# sudo apt install libcamera-dev
+# sudo apt install libkms++-dev libfmt-dev libdrm-dev
+# pip install rpi-libcamera rpi-kms picamera2
 
 os.system('sudo chmod 777 //home/pi/startup.sh')
 
