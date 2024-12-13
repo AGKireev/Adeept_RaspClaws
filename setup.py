@@ -132,6 +132,9 @@ try:
 except:
 	pass
 
+# TODO: Add
+# sudo apt install -y python3-picamera2 libopencv-dev
+
 os.system('sudo chmod 777 //home/pi/startup.sh')
 
 replace_num('/etc/rc.local','fi','fi\n//home/pi/startup.sh start')

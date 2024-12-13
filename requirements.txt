@@ -15,3 +15,5 @@ psutil
 smbus
 adafruit-blinka
 adafruit-circuitpython-pca9685
+picamera2
+opencv-python

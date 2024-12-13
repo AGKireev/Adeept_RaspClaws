@@ -13,6 +13,7 @@ import robotLight
 import RPIservo
 import move
 import logging
+from picamera2 import Picamera2
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -349,9 +350,13 @@ class Camera(BaseCamera):
 
 
 	def __init__(self):
-		if os.environ.get('OPENCV_CAMERA_SOURCE'):
-			Camera.set_video_source(int(os.environ['OPENCV_CAMERA_SOURCE']))
+		# if os.environ.get('OPENCV_CAMERA_SOURCE'):
+		# 	Camera.set_video_source(int(os.environ['OPENCV_CAMERA_SOURCE']))
+		# super(Camera, self).__init__()
 		super(Camera, self).__init__()
+		self.picam2 = Picamera2()
+		self.picam2.configure(self.picam2.create_preview_configuration(main={"size": (640, 480)}))
+		self.picam2.start()
 
 
 	def color_find_set(self, invarH, invarS, invarV):
@@ -411,48 +416,60 @@ class Camera(BaseCamera):
 
 	@staticmethod
 	def frames():
-		logger.info(f"Camera source: {Camera.video_source}")
-
-		camera = cv2.VideoCapture(Camera.video_source)
-		logger.info(f"Camera: {camera}")
-		logger.info(f"Camera.isOpened: {camera.isOpened()}")
-		if not camera.isOpened():
-			raise RuntimeError('Could not start camera.')
-
-		cvt = CVThread()
-		cvt.start()
+		# logger.info(f"Camera source: {Camera.video_source}")
+		#
+		# camera = cv2.VideoCapture(Camera.video_source)
+		# logger.info(f"Camera: {camera}")
+		# logger.info(f"Camera.isOpened: {camera.isOpened()}")
+		# if not camera.isOpened():
+		# 	raise RuntimeError('Could not start camera.')
+		#
+		# cvt = CVThread()
+		# cvt.start()
+		camera = Picamera2()
+		camera.configure(camera.create_preview_configuration(main={"size": (640, 480)}))
+		camera.start()
 
 		while True:
-			# read current frame
-			# _, img = camera.read()
+			# # read current frame
+			# # _, img = camera.read()
+			#
+			# for _ in range(10):  # Read 10 frames to allow the camera to stabilize
+			# 	_, img = camera.read()
+			# 	logger.info(f"Camera: {img}")
+			# 	time.sleep(1)
+			#
+			# if img is None:
+			# 	raise RuntimeError('Could not read frame.')
+			#
+			# if img.all is None:
+			# 	continue
+			#
+			# if Camera.modeSelect == 'none':
+			# 	switch.switch(1,0)
+			# 	cvt.pause()
+			# else:
+			# 	if cvt.CVThreading:
+			# 		pass
+			# 	else:
+			# 		cvt.mode(Camera.modeSelect, img)
+			# 		cvt.resume()
+			# 	try:
+			# 		img = cvt.elementDraw(img)
+			# 	except:
+			# 		pass
+			#
+			#
+			#
+			# # encode as a jpeg image and return it
+			# if cv2.imencode('.jpg', img)[0]:
+			# 	yield cv2.imencode('.jpg', img)[1].tobytes()
+			frame = camera.capture_array()
+			# Convert the frame to BGR format for OpenCV
+			frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
-			for _ in range(10):  # Read 10 frames to allow the camera to stabilize
-				_, img = camera.read()
-				logger.info(f"Camera: {img}")
-				time.sleep(1)
-
-			if img is None:
-				raise RuntimeError('Could not read frame.')
-
-			if img.all is None:
+			# Encode the frame in JPEG format
+			ret, jpeg = cv2.imencode('.jpg', frame)
+			if not ret:
 				continue
-
-			if Camera.modeSelect == 'none':
-				switch.switch(1,0)
-				cvt.pause()
-			else:
-				if cvt.CVThreading:
-					pass
-				else:
-					cvt.mode(Camera.modeSelect, img)
-					cvt.resume()
-				try:
-					img = cvt.elementDraw(img)
-				except:
-					pass
-			
-
-
-			# encode as a jpeg image and return it
-			if cv2.imencode('.jpg', img)[0]:
-				yield cv2.imencode('.jpg', img)[1].tobytes()
+			yield jpeg.tobytes()
