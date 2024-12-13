@@ -340,12 +340,15 @@ async def main_logic(websocket, path):
 	await recv_msg(websocket)
 
 def start_websocket_server():
+    async def run_server():
+        async with websockets.serve(main_logic, '0.0.0.0', 8888):
+            logger.info('WebSocket server started on port 8888')
+            await asyncio.Future()  # Run forever
+
+    # Create a new event loop for this thread and run the server
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    start_server = websockets.serve(main_logic, '0.0.0.0', 8888)
-    loop.run_until_complete(start_server)
-    logger.info('WebSocket server started on port 8888')
-    loop.run_forever()
+    loop.run_until_complete(run_server())
 
 if __name__ == '__main__':
 	logger.info('Starting main loop')
