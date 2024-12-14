@@ -83,7 +83,7 @@ def use_library(servo_ids: List[int] | None = None) -> None:
     logger.info(f"Using RPIservo library to control servos {servo_ids}.")
     controller = None
     try:
-        import RPIservo
+        import server.RPIservo as RPIservo
         controller = RPIservo.ServoCtrl()
         controller.start()
         cycles = 10
@@ -110,7 +110,7 @@ def init_servos(servo_ids: List[int] | None = None) -> None:
     logger.info("Initializing servos to default positions: %s", servo_ids)
     controller = None
     try:
-        import RPIservo
+        import server.RPIservo as RPIservo
         controller = RPIservo.ServoCtrl()
         controller.start()
         controller.move_init(servo_ids)
