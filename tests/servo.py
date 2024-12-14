@@ -92,9 +92,14 @@ def use_library(servo_ids: List[int] | None = None) -> None:
         controller = RPIservo.ServoCtrl()
         controller.start()
         cycles = 10
+        alternate = True  # Flag to alternate positions
         for _ in range(cycles):
             logger.info(f"Cycle {_ + 1} of {cycles}")
-            controller.auto_speed(servo_ids, [45, -45])
+            if alternate:
+                controller.auto_speed(servo_ids, [45, -45])
+            else:
+                controller.auto_speed(servo_ids, [-45, 45])
+            alternate = not alternate  # Toggle the alternate flag
             while controller.running.is_set():
                 time.sleep(0.1)  # Wait for the controller to finish
             time.sleep(1)  # Pause before the next cycle
