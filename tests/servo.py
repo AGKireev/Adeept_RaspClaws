@@ -9,7 +9,8 @@ from adafruit_motor.servo import Servo
 from board import SCL, SDA
 
 # Add the parent directory of 'server' to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+script_dir = os.path.realpath(os.path.dirname(__file__))
+sys.path.append(os.path.abspath(os.path.join(script_dir, '..', 'server')))
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -87,7 +88,7 @@ def use_library(servo_ids: List[int] | None = None) -> None:
     logger.info(f"Using RPIservo library to control servos {servo_ids}.")
     controller = None
     try:
-        import server.RPIservo as RPIservo
+        import RPIservo
         controller = RPIservo.ServoCtrl()
         controller.start()
         cycles = 10
@@ -114,7 +115,7 @@ def init_servos(servo_ids: List[int] | None = None) -> None:
     logger.info("Initializing servos to default positions: %s", servo_ids)
     controller = None
     try:
-        import server.RPIservo as RPIservo
+        import RPIservo
         controller = RPIservo.ServoCtrl()
         controller.start()
         controller.move_init(servo_ids)
