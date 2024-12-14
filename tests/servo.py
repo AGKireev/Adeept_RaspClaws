@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import busio
@@ -6,6 +7,9 @@ from typing import List
 from adafruit_pca9685 import PCA9685
 from adafruit_motor.servo import Servo
 from board import SCL, SDA
+
+# Add the parent directory of 'server' to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
