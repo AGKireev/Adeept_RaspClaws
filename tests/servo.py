@@ -39,12 +39,16 @@ def move_fast(servo_ids: List[int] | None = None) -> None:
     logger.info(f"Moving servos {servo_ids} quickly.")
     if servo_ids is None:
         servo_ids = [0]
-    for _ in range(10):  # Repeat 10 cycles
+    cycles = 10
+    for _ in range(cycles):  # Repeat N cycles
+        logger.info(f"Cycle {_ + 1} of {cycles}")
         for servo_id in servo_ids:
+            logger.info(f"servo {servo_id} forward ...")
             servos[servo_id].angle = 90  # Move to 90 degrees
         time.sleep(1)
 
         for servo_id in servo_ids:
+            logger.info(f"servo {servo_id} backward ...")
             servos[servo_id].angle = 120  # Move to 120 degrees
         time.sleep(1)
 
@@ -55,13 +59,17 @@ def move_slow(servo_ids: List[int] | None = None) -> None:
     logger.info(f"Moving servos {servo_ids} slowly.")
     if servo_ids is None:
         servo_ids = [0]
-    for _ in range(10):  # Repeat 10 cycles
+    cycles = 10
+    for _ in range(cycles):  # Repeat N cycles
+        logger.info(f"Cycle {_ + 1} of {cycles}")
         for servo_id in servo_ids:
+            logger.info(f"servo {servo_id} forward ...")
             for angle in range(90, 121):  # Slowly move from 90 to 120 degrees
                 servos[servo_id].angle = angle
                 time.sleep(0.05)
 
         for servo_id in servo_ids:
+            logger.info(f"servo {servo_id} backward ...")
             for angle in range(120, 89, -1):  # Slowly move back from 120 to 90 degrees
                 servos[servo_id].angle = angle
                 time.sleep(0.05)
@@ -78,7 +86,9 @@ def use_library(servo_ids: List[int] | None = None) -> None:
         import RPIservo
         controller = RPIservo.ServoCtrl()
         controller.start()
-        for _ in range(10):
+        cycles = 10
+        for _ in range(cycles):
+            logger.info(f"Cycle {_ + 1} of {cycles}")
             controller.auto_speed(servo_ids, [45, -45])
             while controller.running.is_set():
                 time.sleep(0.1)  # Wait for the controller to finish
@@ -138,10 +148,10 @@ if __name__ == '__main__':
             elif command == 'init':
                 init_servos(servos_to_move)
             else:
-                logger.error('Invalid command. Usage: python servo.py [fast|slow|library] [servo_ids]')
+                logger.error('Invalid command. Usage: python servo.py [fast|slow|library|init] [servo_ids]')
                 sys.exit(1)
         else:
-            logger.error('No command provided. Usage: python servo.py [fast|slow|library] [servo_ids]')
+            logger.error('No command provided. Usage: python servo.py [fast|slow|library|init] [servo_ids]')
             sys.exit(1)
     except KeyboardInterrupt:
         logger.info("Exiting...")
