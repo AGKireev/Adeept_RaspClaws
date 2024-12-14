@@ -1,18 +1,3 @@
-#!/usr/bin/env python3
-# File name   : servo.py
-# Description : Control Servos
-# Author      : William
-# Date        : 2019/02/23
-
-# from __future__ import division
-import time
-import threading
-import random
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 # ======================================================================
 # IMPORTANT UPDATE NOTES:
 #
@@ -47,349 +32,251 @@ logger = logging.getLogger(__name__)
 #   angle=0° -> ~488us
 #   angle=180° -> ~2538us
 # This matches original scaling. Each "step" approx. 4.88us, so 100 steps ~488us and 520 steps ~2538us.
-#
-# We keep all function names, comments, logic, arrays, threading, and behavior as they are critical to maintain backward compatibility.
-# Just the underlying method of setting servo position changes.
-#
-# Please read added comments for detailed explanation.
 # ======================================================================
-
-import busio
+import time
+import threading
+import logging
+from typing import List, Union, Optional
 from board import SCL, SDA
+import busio
 import adafruit_pca9685
 from adafruit_motor import servo
-
 import config
 
-# We do not need RPi.GPIO or the legacy Adafruit_PCA9685 Python library anymore.
-# They are replaced by the Adafruit CircuitPython PCA9685 and servo libraries.
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# The original code did:
-# pwm = Adafruit_PCA9685.PCA9685()
-# pwm.set_pwm_freq(50)
-#
-# We now do:
+# Initialize I2C and PCA9685
 i2c = busio.I2C(SCL, SDA)
 pca = adafruit_pca9685.PCA9685(i2c)
 pca.frequency = 50
 
-# Initialize servo objects for each channel:
-# Calculating pulse widths:
-# minPos=100 steps => ~488us
-# maxPos=520 steps => ~2538us
-# We'll set servo min_pulse=488, max_pulse=2538 to maintain the exact same range.
-min_pulse_us = 488
-max_pulse_us = 2538
+# Define pulse width range in microseconds for 0 to 180 degrees
+MIN_PULSE_US = 500  # 488
+MAX_PULSE_US = 2500 # 2538
 
-servos = {}
-for i in range(16):
-    servos[i] = servo.Servo(pca.channels[i], min_pulse=min_pulse_us, max_pulse=max_pulse_us)
-
+# Load initial servo positions from config
 pwm_config = config.read("pwm")
+init_positions = [pwm_config[f"init_pwm{i}"] for i in range(16)]
 
-# init_pwm1 = 300
-# ..
-# init_pwm15 = 300
+# Create servo instances for all 16 channels
+servos = [servo.Servo(pca.channels[i], min_pulse=MIN_PULSE_US, max_pulse=MAX_PULSE_US) for i in range(16)]
 
 class ServoCtrl(threading.Thread):
-    def __init__(self, *args, **kwargs):
-        # Keeping all original arrays and logic unchanged
-        self.sc_direction = [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1]
-        self.initPos = [pwm_config['init_pwm{}'.format(i)] for i in range(16)]
-        self.goalPos = [300,300,300,300, 300,300,300,300 ,300,300,300,300, 300,300,300,300]
-        self.nowPos  = [300,300,300,300, 300,300,300,300 ,300,300,300,300, 300,300,300,300]
-        self.bufferPos  = [300.0,300.0,300.0,300.0, 300.0,300.0,300.0,300.0, 300.0,300.0,300.0,300.0 ,300.0,300.0,300.0,300.0]
-        self.lastPos = [300,300,300,300, 300,300,300,300 ,300,300,300,300, 300,300,300,300]
-        self.ingGoal = [300,300,300,300, 300,300,300,300 ,300,300,300,300, 300,300,300,300]
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.sc_direction: List[int] = [1] * 16
+        self.init_positions: List[int] = init_positions
+        self.goal_positions: List[int] = [300] * 16
+        self.current_positions: List[int] = [300] * 16
+        self.buffer_positions: List[float] = [300.0] * 16
+        self.last_positions: List[int] = [300] * 16
+        self.ing_goal: List[int] = [300] * 16
+        self.min_positions: List[int] = [100] * 16
+        self.max_positions: List[int] = [520] * 16
+        self.sc_speed: List[int] = [0] * 16
 
-        self.maxPos  = [520,520,520,520, 520,520,520,520 ,520,520,520,520 ,520,520,520,520]
-        self.minPos  = [100,100,100,100, 100,100,100,100 ,100,100,100,100 ,100,100,100,100]
-        self.scSpeed = [0,0,0,0, 0,0,0,0 ,0,0,0,0 ,0,0,0,0]
-
-        self.ctrlRangeMax = 520
-        self.ctrlRangeMin = 100
-        self.angleRange = 180
+        self.ctrl_range_max: int = 520
+        self.ctrl_range_min: int = 100
+        self.angle_range: int = 180
 
         '''
         scMode: 'init' 'auto' 'certain' 'quick' 'wiggle'
         '''
-        self.scMode = 'auto'
-        self.scTime = 2.0
-        self.scSteps = 30
-        
-        self.scDelay = 0.037
-        self.scMoveTime = 0.037
+        self.sc_mode: str = 'auto'
+        self.sc_time: float = 2.0
+        self.sc_steps: int = 30
+        self.sc_delay: float = 0.037
+        self.sc_move_time: float = 0.037
 
-        self.goalUpdate = 0
-        self.wiggleID = 0
-        self.wiggleDirection = 1
+        self.goal_update: int = 0
+        self.wiggle_id: int = 0
+        self.wiggle_direction: int = 1
 
-        super(ServoCtrl, self).__init__(*args, **kwargs)
-        self.__flag = threading.Event()
-        self.__flag.clear()
+        self.running = threading.Event()
+        self.running.clear()
 
-    def pause(self):
-        # Keep original function and comment
-        logger.info('ServoCtrl: pause..')
-        self.__flag.clear()
+    def pause(self) -> None:
+        logger.info("ServoCtrl: pause")
+        self.running.clear()
 
-    def resume(self):
-        # Keep original function and comment
-        logger.info('ServoCtrl: resume..')
-        self.__flag.set()
+    def resume(self) -> None:
+        logger.info("ServoCtrl: resume")
+        self.running.set()
 
+    def pwm_to_angle(self, pwm: int) -> int:
+        return int(max(0, min(int((pwm - self.ctrl_range_min) / (self.ctrl_range_max - self.ctrl_range_min) * self.angle_range), 180)))
 
-    def pwm_to_angle(self, steps):
-        # Convert the internal PWM steps (100 to 520) to a servo angle (0 to 180)
-        # angle = ((steps - ctrlRangeMin) / (ctrlRangeMax - ctrlRangeMin)) * angleRange
-        angle = (steps - self.ctrlRangeMin) / float(self.ctrlRangeMax - self.ctrlRangeMin) * self.angleRange
-        if angle < 0: angle = 0
-        if angle > 180: angle = 180
-        return angle
-
-    def set_servo_pwm(self, ID, PWM_input):
-        # This function replaces the original pwm.set_pwm(ID, 0, PWM_input) calls.
-        # We do not change the logic, just the underlying method.
-        # We keep the same PWM_input values, and convert them to angle.
-        angle = self.pwm_to_angle(PWM_input)
-        servos[ID].angle = angle
-
-    def moveInit(self):
-        # scMode = 'init', move all servos to initPos
-        self.scMode = 'init'
-        for i in range(0,16):
-            # replaced: pwm.set_pwm(i,0,self.initPos[i])
-            self.set_servo_pwm(i, self.initPos[i])
-            self.lastPos[i] = self.initPos[i]
-            self.nowPos[i] = self.initPos[i]
-            self.bufferPos[i] = float(self.initPos[i])
-            self.goalPos[i] = self.initPos[i]
-        self.pause()
-
-    def initConfig(self, ID, initInput, moveTo):
-        # Sets initial position config if within allowed range
-        if initInput > self.minPos[ID] and initInput < self.maxPos[ID]:
-            self.initPos[ID] = initInput
-            if moveTo:
-                # replaced: pwm.set_pwm(ID,0,self.initPos[ID])
-                self.set_servo_pwm(ID, self.initPos[ID])
+    def set_servo_pwm(self, channel: int, pwm: int) -> None:
+        if self.min_positions[channel] <= pwm <= self.max_positions[channel]:
+            angle = self.pwm_to_angle(pwm)
+            servos[channel].angle = angle
+            self.current_positions[channel] = pwm
         else:
-            logger.error(f"ServoCtrl: initConfig: Invalid initInput {initInput} for servo {ID}")
+            logger.warning(f"PWM value {pwm} out of range for channel {channel}.")
 
-    def moveServoInit(self, ID):
-        # Move selected servos to their initPos
-        self.scMode = 'init'
-        for i in range(0,len(ID)):
-            # replaced: pwm.set_pwm(ID[i], 0, self.initPos[ID[i]])
-            self.set_servo_pwm(ID[i], self.initPos[ID[i]])
-            self.lastPos[ID[i]] = self.initPos[ID[i]]
-            self.nowPos[ID[i]] = self.initPos[ID[i]]
-            self.bufferPos[ID[i]] = float(self.initPos[ID[i]])
-            self.goalPos[ID[i]] = self.initPos[ID[i]]
+    def move_init(self, ids: Union[List[int], int, None] = None) -> None:
+        """
+        Initialize servos.
+        - ids=None: Initializes all servos.
+        - ids=list: Initializes specific servos.
+        - ids=int: Initializes a single servo.
+        """
+        if ids is None:  # Initialize all servos
+            ids = range(16)
+        elif isinstance(ids, int):  # Single servo
+            ids = [ids]
+
+        for i in ids:
+            self.set_servo_pwm(i, self.init_positions[i])
+            self.last_positions[i] = self.init_positions[i]
+            self.current_positions[i] = self.init_positions[i]
+            self.buffer_positions[i] = float(self.init_positions[i])
+            self.goal_positions[i] = self.init_positions[i]
+
+        self.sc_mode = 'init'
         self.pause()
 
-    def posUpdate(self):
-        # Update lastPos to nowPos
-        self.goalUpdate = 1
-        for i in range(0,16):
-            self.lastPos[i] = self.nowPos[i]
-        self.goalUpdate = 0
+    def update_init_position(self, id: int, init_input: int, move_to: bool = False) -> None:
+        """
+        Updates the initial position of a specific servo.
 
-    def speedUpdate(self, IDinput, speedInput):
-        # Update speeds
-        for i in range(0,len(IDinput)):
-            self.scSpeed[IDinput[i]] = speedInput[i]
-
-    def moveAuto(self):
-        # Auto mode: moves from lastPos to goalPos in scTime with scSteps
-        for i in range(0,16):
-            self.ingGoal[i] = self.goalPos[i]
-
-        for i in range(0, self.scSteps):
-            for dc in range(0,16):
-                if not self.goalUpdate:
-                    self.nowPos[dc] = int(round((self.lastPos[dc] + (((self.goalPos[dc] - self.lastPos[dc])/self.scSteps)*(i+1))),0))
-                    # replaced: pwm.set_pwm(dc, 0, self.nowPos[dc])
-                    self.set_servo_pwm(dc, self.nowPos[dc])
-
-                if self.ingGoal != self.goalPos:
-                    self.posUpdate()
-                    time.sleep(self.scTime/self.scSteps)
-                    return 1
-            time.sleep((self.scTime/self.scSteps - self.scMoveTime))
-
-        self.posUpdate()
-        self.pause()
-        return 0
-
-    def moveCert(self):
-        # Certain mode: move at certain speed until goal is reached
-        for i in range(0,16):
-            self.ingGoal[i] = self.goalPos[i]
-            self.bufferPos[i] = self.lastPos[i]
-
-        while self.nowPos != self.goalPos:
-            for i in range(0,16):
-                if self.lastPos[i] < self.goalPos[i]:
-                    self.bufferPos[i] += self.pwmGenOut(self.scSpeed[i])/(1/self.scDelay)
-                    newNow = int(round(self.bufferPos[i], 0))
-                    if newNow > self.goalPos[i]:newNow = self.goalPos[i]
-                    self.nowPos[i] = newNow
-                elif self.lastPos[i] > self.goalPos[i]:
-                    self.bufferPos[i] -= self.pwmGenOut(self.scSpeed[i])/(1/self.scDelay)
-                    newNow = int(round(self.bufferPos[i], 0))
-                    if newNow < self.goalPos[i]:newNow = self.goalPos[i]
-                    self.nowPos[i] = newNow
-
-                if not self.goalUpdate:
-                    # replaced: pwm.set_pwm(i, 0, self.nowPos[i])
-                    self.set_servo_pwm(i, self.nowPos[i])
-
-                if self.ingGoal != self.goalPos:
-                    self.posUpdate()
-                    return 1
-            self.posUpdate()
-            time.sleep(self.scDelay-self.scMoveTime)
+        Args:
+            id (int): The servo ID.
+            init_input (int): The new initial position (PWM value).
+            move_to (bool): If True, moves the servo to the updated initial position immediately.
+        """
+        if self.min_positions[id] <= init_input <= self.max_positions[id]:
+            self.init_positions[id] = init_input
+            if move_to:
+                self.set_servo_pwm(id, init_input)
         else:
-            self.pause()
-            return 0
+            logger.error(f"Invalid initial position {init_input} for servo {id}.")
 
-    def pwmGenOut(self, angleInput):
-        # Convert angle difference to PWM step difference
-        # same logic as original code
-        return int(round(((self.ctrlRangeMax-self.ctrlRangeMin)/self.angleRange*angleInput),0))
+    def pos_update(self) -> None:
+        self.goal_update = 1
+        for i in range(16):
+            self.last_positions[i] = self.current_positions[i]
+        self.goal_update = 0
 
-    def setAutoTime(self, autoSpeedSet):
-        self.scTime = autoSpeedSet
+    def speed_update(self, ids: List[int], speeds: List[int]) -> None:
+        for i, speed in zip(ids, speeds):
+            self.sc_speed[i] = speed
 
-    def setDelay(self, delaySet):
-        self.scDelay = delaySet
+    def move_auto(self) -> None:
+        for i in range(16):
+            self.ing_goal[i] = self.goal_positions[i]
 
-    def autoSpeed(self, ID, angleInput):
-        # Auto mode with given angles
-        self.scMode = 'auto'
-        self.goalUpdate = 1
-        for i in range(0,len(ID)):
-            newGoal = self.initPos[ID[i]] + self.pwmGenOut(angleInput[i])*self.sc_direction[ID[i]]
-            if newGoal>self.maxPos[ID[i]]:newGoal=self.maxPos[ID[i]]
-            elif newGoal<self.minPos[ID[i]]:newGoal=self.minPos[ID[i]]
-            self.goalPos[ID[i]] = newGoal
-        self.goalUpdate = 0
+        for step in range(self.sc_steps):
+            for channel in range(16):
+                if not self.goal_update:
+                    delta = (self.goal_positions[channel] - self.last_positions[channel]) / self.sc_steps
+                    self.current_positions[channel] = int(round(self.last_positions[channel] + delta * (step + 1)))
+                    self.set_servo_pwm(channel, self.current_positions[channel])
+            time.sleep(self.sc_time / self.sc_steps)
+        self.pos_update()
+        self.pause()
+
+    def move_cert(self) -> None:
+        for i in range(16):
+            self.ing_goal[i] = self.goal_positions[i]
+            self.buffer_positions[i] = self.last_positions[i]
+
+        while self.current_positions != self.goal_positions:
+            for i in range(16):
+                if self.last_positions[i] < self.goal_positions[i]:
+                    self.buffer_positions[i] += self.sc_speed[i] / (1 / self.sc_delay)
+                elif self.last_positions[i] > self.goal_positions[i]:
+                    self.buffer_positions[i] -= self.sc_speed[i] / (1 / self.sc_delay)
+                self.current_positions[i] = int(round(self.buffer_positions[i]))
+                self.set_servo_pwm(i, self.current_positions[i])
+            time.sleep(self.sc_delay - self.sc_move_time)
+        self.pos_update()
+        self.pause()
+
+    def pwm_gen_out(self, angle: float) -> int:
+        return int(round((self.ctrl_range_max - self.ctrl_range_min) / self.angle_range * angle, 0))
+
+    def set_auto_time(self, time: float) -> None:
+        self.sc_time = time
+
+    def set_delay(self, delay: float) -> None:
+        self.sc_delay = delay
+
+    def auto_speed(self, ids: List[int], angles: List[float]) -> None:
+        self.sc_mode = 'auto'
+        self.goal_update = 1
+        for i, angle in zip(ids, angles):
+            target = self.init_positions[i] + self.pwm_gen_out(angle) * self.sc_direction[i]
+            self.goal_positions[i] = max(self.min_positions[i], min(target, self.max_positions[i]))
+        self.goal_update = 0
         self.resume()
 
-    def certSpeed(self, ID, angleInput, speedSet):
-        # Certain speed mode with given angle input
-        self.scMode = 'certain'
-        self.goalUpdate = 1
-        for i in range(0,len(ID)):
-            newGoal = self.initPos[ID[i]] + self.pwmGenOut(angleInput[i])*self.sc_direction[ID[i]]
-            if newGoal>self.maxPos[ID[i]]:newGoal=self.maxPos[ID[i]]
-            elif newGoal<self.minPos[ID[i]]:newGoal=self.minPos[ID[i]]
-            self.goalPos[ID[i]] = newGoal
-        self.speedUpdate(ID, speedSet)
-        self.goalUpdate = 0
+    def cert_speed(self, ids: List[int], angles: List[float], speeds: List[int]) -> None:
+        self.sc_mode = 'certain'
+        self.goal_update = 1
+        for i, angle in zip(ids, angles):
+            target = self.init_positions[i] + self.pwm_gen_out(angle) * self.sc_direction[i]
+            self.goal_positions[i] = max(self.min_positions[i], min(target, self.max_positions[i]))
+        self.speed_update(ids, speeds)
+        self.goal_update = 0
         self.resume()
 
-    def moveWiggle(self):
-        # Wiggle mode
-        self.bufferPos[self.wiggleID] += self.wiggleDirection*self.sc_direction[self.wiggleID]*self.pwmGenOut(self.scSpeed[self.wiggleID])/(1/self.scDelay)
-        newNow = int(round(self.bufferPos[self.wiggleID], 0))
-        if self.bufferPos[self.wiggleID] > self.maxPos[self.wiggleID]:
-            self.bufferPos[self.wiggleID] = self.maxPos[self.wiggleID]
-        elif self.bufferPos[self.wiggleID] < self.minPos[self.wiggleID]:
-            self.bufferPos[self.wiggleID] = self.minPos[self.wiggleID]
-        self.nowPos[self.wiggleID] = newNow
-        self.lastPos[self.wiggleID] = newNow
-        if self.bufferPos[self.wiggleID] < self.maxPos[self.wiggleID] and self.bufferPos[self.wiggleID] > self.minPos[self.wiggleID]:
-            # replaced: pwm.set_pwm(self.wiggleID, 0, self.nowPos[self.wiggleID])
-            self.set_servo_pwm(self.wiggleID, self.nowPos[self.wiggleID])
-        else:
-            self.stopWiggle()
-        time.sleep(self.scDelay-self.scMoveTime)
+    def move_wiggle(self) -> None:
+        while self.running.is_set():
+            delta = self.wiggle_direction * self.sc_speed[self.wiggle_id] / (1 / self.sc_delay)
+            self.buffer_positions[self.wiggle_id] += delta * self.sc_direction[self.wiggle_id]
+            self.current_positions[self.wiggle_id] = int(round(self.buffer_positions[self.wiggle_id]))
+            self.set_servo_pwm(self.wiggle_id, self.current_positions[self.wiggle_id])
+            time.sleep(self.sc_delay - self.sc_move_time)
 
-    def stopWiggle(self):
+    def stop_wiggle(self) -> None:
         self.pause()
-        self.posUpdate()
+        self.pos_update()
 
-    def singleServo(self, ID, direcInput, speedSet):
-        # Single servo wiggle mode
-        self.wiggleID = ID
-        self.wiggleDirection = direcInput
-        self.scSpeed[ID] = speedSet
-        self.scMode = 'wiggle'
-        self.posUpdate()
+    def single_servo(self, id: int, direction: int, speed: int) -> None:
+        self.wiggle_id = id
+        self.wiggle_direction = direction
+        self.sc_speed[id] = speed
+        self.sc_mode = 'wiggle'
         self.resume()
 
-    def moveAngle(self, ID, angleInput):
-        # Move servo by angleInput from initPos, keep same logic
-        self.nowPos[ID] = int(self.initPos[ID] + self.sc_direction[ID]*self.pwmGenOut(angleInput))
-        if self.nowPos[ID] > self.maxPos[ID]:self.nowPos[ID] = self.maxPos[ID]
-        elif self.nowPos[ID] < self.minPos[ID]:self.nowPos[ID] = self.minPos[ID]
-        self.lastPos[ID] = self.nowPos[ID]
-        # replaced: pwm.set_pwm(ID, 0, self.nowPos[ID])
-        self.set_servo_pwm(ID, self.nowPos[ID])
+    def move_angle(self, id: int, angle: float) -> None:
+        pwm = self.init_positions[id] + self.pwm_gen_out(angle) * self.sc_direction[id]
+        self.current_positions[id] = max(self.min_positions[id], min(int(pwm), self.max_positions[id]))
+        self.last_positions[id] = self.current_positions[id]
+        self.set_servo_pwm(id, self.current_positions[id])
 
-    def scMove(self):
-        # Execute movements based on scMode
-        if self.scMode == 'init':
-            self.moveInit()
-        elif self.scMode == 'auto':
-            self.moveAuto()
-        elif self.scMode == 'certain':
-            self.moveCert()
-        elif self.scMode == 'wiggle':
-            self.moveWiggle()
+    def sc_move(self) -> None:
+        if self.sc_mode == 'init':
+            self.move_init()
+        elif self.sc_mode == 'auto':
+            self.move_auto()
+        elif self.sc_mode == 'certain':
+            self.move_cert()
+        elif self.sc_mode == 'wiggle':
+            self.move_wiggle()
 
-    def setPWM(self, ID, PWM_input):
-        # Set raw PWM steps directly
-        self.lastPos[ID] = PWM_input
-        self.nowPos[ID] = PWM_input
-        self.bufferPos[ID] = float(PWM_input)
-        self.goalPos[ID] = PWM_input
-        # replaced: pwm.set_pwm(ID, 0, PWM_input)
-        self.set_servo_pwm(ID, PWM_input)
+    def set_pwm(self, id: int, pwm: int) -> None:
+        self.last_positions[id] = pwm
+        self.current_positions[id] = pwm
+        self.buffer_positions[id] = float(pwm)
+        self.goal_positions[id] = pwm
+        self.set_servo_pwm(id, pwm)
         self.pause()
 
-    def run(self):
-        # Thread run loop
-        while 1:
-            self.__flag.wait()
-            self.scMove()
-            pass
+    def shutdown(self) -> None:
+        """
+        Gracefully shut down the servo controller.
+        """
+        logger.info("Shutting down ServoCtrl...")
+        self.pause()
+        for s in servos:
+            s.angle = None  # Disable all servos
+        pca.deinit()
+        logger.info("ServoCtrl shut down successfully.")
 
-
-if __name__ == '__main__':
-    sc = ServoCtrl()
-    sc.start()
-    while 1:
-        sc.moveAngle(0,(random.random()*100-50))
-        time.sleep(1)
-        sc.moveAngle(1,(random.random()*100-50))
-        time.sleep(1)
-        '''
-        sc.singleServo(0, 1, 5)
-        time.sleep(6)
-        sc.singleServo(0, -1, 30)
-        time.sleep(1)
-        '''
-        '''
-        delaytime = 5
-        sc.certSpeed([0,7], [60,0], [40,60])
-        logger.info('ServoCtrl: xx1xx')
-        time.sleep(delaytime)
-
-        sc.certSpeed([0,7], [0,60], [40,60])
-        logger.info('ServoCtrl: xx2xx')
-        time.sleep(delaytime+2)
-
-        # sc.moveServoInit([0])
-        # time.sleep(delaytime)
-        '''
-        '''
-        pwm.set_pwm(0,0,560)
-        time.sleep(1)
-        pwm.set_pwm(0,0,100)
-        time.sleep(2)
-        '''
-        pass
-    pass
+    def run(self) -> None:
+        while True:
+            self.running.wait()
+            self.sc_move()

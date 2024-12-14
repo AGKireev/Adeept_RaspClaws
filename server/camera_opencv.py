@@ -263,7 +263,7 @@ class CVThread(threading.Thread):
 			CVThread.P_anglePos += 0.15*(errorGenOut*Dir)*CVThread.cameraDiagonalW/CVThread.videoW
 
 			if abs(errorInput) > CVThread.tor:
-				CVThread.scGear.moveAngle(ID,CVThread.P_anglePos)
+				CVThread.scGear.move_angle(ID,CVThread.P_anglePos)
 				CVThread.X_lock = 0
 			else:
 				CVThread.X_lock = 1
@@ -272,7 +272,7 @@ class CVThread(threading.Thread):
 			CVThread.T_anglePos += 0.15*(errorGenOut*Dir)*CVThread.cameraDiagonalH/CVThread.videoH
 
 			if abs(errorInput) > CVThread.tor:
-				CVThread.scGear.moveAngle(ID,CVThread.T_anglePos)
+				CVThread.scGear.move_angle(ID,CVThread.T_anglePos)
 				CVThread.Y_lock = 0
 			else:
 				CVThread.Y_lock = 1
