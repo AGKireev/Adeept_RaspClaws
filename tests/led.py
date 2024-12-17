@@ -40,3 +40,13 @@ if __name__ == "__main__":
         logging.info("Script terminated by user.")
     except Exception as e:
         logging.error(f"An error occurred: {e}")
+
+# if __name__ == '__main__':
+#     RL=RobotLight()
+#     RL.start()
+#     RL.breath(70,70,255)
+#     time.sleep(15)
+#     RL.pause()
+#     RL.frontLight('off')
+#     time.sleep(2)
+#     RL.police()

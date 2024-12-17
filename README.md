@@ -38,12 +38,12 @@ sudo systemctl status adeept_webserver.service
 sudo apt update
 sudo apt install linux-headers-$(uname -r) device-tree-compiler raspi-utils
 git clone --branch pi5 https://github.com/jgarff/rpi_ws281x.git
-cd rpi_ws281x
-cd rp1_ws281x_pwm
+	cd rpi_ws281x
+	cd rp1_ws281x_pwm
 make
 ./dts.sh
-sudo insmod ./rp1_ws281x_pwm.ko pwm_channel=0
-sudo dtoverlay -d . rp1_ws281x_pwm
+	sudo insmod ./rp1_ws281x_pwm.ko pwm_channel=0
+	sudo dtoverlay -d . rp1_ws281x_pwm
 sudo pinctrl set 12 a0 pn
 sudo apt install cmake -y
 cmake --version

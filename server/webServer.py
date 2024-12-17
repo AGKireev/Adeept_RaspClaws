@@ -372,7 +372,7 @@ if __name__ == '__main__':
 		RL.start()
 		RL.breath(70,70,255)
 	except Exception as e:
-		logger.error('Failed to start RobotLight with exception: {e}')
+		logger.error(f'Failed to start RobotLight with exception: {e}')
 		RL = None
 
 	# global flask_app

@@ -1,15 +1,15 @@
-import os
+# import os
 import cv2
 from base_camera import BaseCamera
 import numpy as np
 # import switch  # The 3 single LEDs switches, we don't need them for now
 import datetime
 import Kalman_filter
-import PID
+# import PID
 import time
 import threading
 import imutils
-import robotLight
+# import robotLight
 import RPIservo
 import move
 import logging
@@ -21,11 +21,11 @@ from picamera2 import Picamera2
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-led = robotLight.RobotLight()
-pid = PID.PID()
-pid.SetKp(0.5)
-pid.SetKd(0)
-pid.SetKi(0)
+# led = robotLight.RobotLight()
+# pid = PID.PID()
+# pid.SetKp(0.5)
+# pid.SetKd(0)
+# pid.SetKi(0)
 
 CVRun = 1
 linePos_1 = 440
