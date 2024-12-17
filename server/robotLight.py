@@ -129,14 +129,14 @@ class RobotLight(threading.Thread):
     # Define functions which animate LEDs in various ways.
     def set_color(self, r, g, b):
         """Wipe color across display a pixel at a time."""
-        color = Color(int(r),int(g),int(b))
+        color = rpi_ws281x.Color(int(r),int(g),int(b))
         for i in range(self.strip.numPixels()):
             self.strip.setPixelColor(i, color)
             self.strip.show()
 
 
     def set_some_color(self, r, g, b, ids):
-        color = Color(int(r),int(g),int(b))
+        color = rpi_ws281x.Color(int(r),int(g),int(b))
         # logger.info(int(R),'  ',int(G),'  ',int(B))
         for i in ids:
             self.strip.setPixelColor(i, color)
