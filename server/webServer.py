@@ -183,10 +183,10 @@ def robot_ctrl(command_input, response):
 		P_sc.stop_wiggle()
 
 	elif 'up' == command_input:
-		T_sc.single_servo(13, -1, 7)
+		T_sc.single_servo(13, 1, 7)
 
 	elif 'down' in command_input:
-		T_sc.single_servo(13, 1, 7)
+		T_sc.single_servo(13, -1, 7)
 
 	elif 'UDstop' in command_input:
 		T_sc.stop_wiggle()
