@@ -2,7 +2,7 @@ import time
 import threading
 import logging
 import rpi_ws281x
-import RPi.GPIO as GPIO
+# import RPi.GPIO as GPIO
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,27 +31,28 @@ class RobotLight(threading.Thread):
         self.right_G = 9
         self.right_B = 25
 
-        self.on  = GPIO.LOW
-        self.off = GPIO.HIGH
+        # self.on  = GPIO.LOW
+        # self.off = GPIO.HIGH
 
         self.lightMode = 'none'		#'none' 'police' 'breath'
 
-        GPIO.setwarnings(False)
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(5, GPIO.OUT)
-        GPIO.setup(6, GPIO.OUT)
-        GPIO.setup(13, GPIO.OUT)
+        # Single LED switches, not used for now
+        # GPIO.setwarnings(False)
+        # GPIO.setmode(GPIO.BCM)
+        # GPIO.setup(5, GPIO.OUT)
+        # GPIO.setup(6, GPIO.OUT)
+        # GPIO.setup(13, GPIO.OUT)
 
-        GPIO.setup(self.left_R, GPIO.OUT)
-        GPIO.setup(self.left_G, GPIO.OUT)
-        GPIO.setup(self.left_B, GPIO.OUT)
-        GPIO.setup(self.right_R, GPIO.OUT)
-        GPIO.setup(self.right_G, GPIO.OUT)
-        GPIO.setup(self.right_B, GPIO.OUT)
+        # GPIO.setup(self.left_R, GPIO.OUT)
+        # GPIO.setup(self.left_G, GPIO.OUT)
+        # GPIO.setup(self.left_B, GPIO.OUT)
+        # GPIO.setup(self.right_R, GPIO.OUT)
+        # GPIO.setup(self.right_G, GPIO.OUT)
+        # GPIO.setup(self.right_B, GPIO.OUT)
 
         # Create NeoPixel object with appropriate configuration.
         self.strip = rpi_ws281x.Adafruit_NeoPixel(self.LED_COUNT, self.LED_PIN, self.LED_FREQ_HZ, self.LED_DMA, self.LED_INVERT, self.LED_BRIGHTNESS, self.LED_CHANNEL)
-        # Intialize the library (must be called once before other functions).
+        # Initialize the library (must be called once before other functions).
         self.strip.begin()
 
         super(RobotLight, self).__init__(*args, **kwargs)
@@ -59,92 +60,92 @@ class RobotLight(threading.Thread):
         self.__flag.clear()
 
 
-    def both_off(self):
-        GPIO.output(self.left_R, self.off)
-        GPIO.output(self.left_G, self.off)
-        GPIO.output(self.left_B, self.off)
-
-        GPIO.output(self.right_R, self.off)
-        GPIO.output(self.right_G, self.off)
-        GPIO.output(self.right_B, self.off)
-
-
-    def both_on(self):
-        GPIO.output(self.left_R, self.on)
-        GPIO.output(self.left_G, self.on)
-        GPIO.output(self.left_B, self.on)
-
-        GPIO.output(self.right_R, self.on)
-        GPIO.output(self.right_G, self.on)
-        GPIO.output(self.right_B, self.on)
+    # def both_off(self):
+    #     GPIO.output(self.left_R, self.off)
+    #     GPIO.output(self.left_G, self.off)
+    #     GPIO.output(self.left_B, self.off)
+    #
+    #     GPIO.output(self.right_R, self.off)
+    #     GPIO.output(self.right_G, self.off)
+    #     GPIO.output(self.right_B, self.off)
 
 
-    def side_on(self, side_X):
-        GPIO.output(side_X, self.on)
+    # def both_on(self):
+    #     GPIO.output(self.left_R, self.on)
+    #     GPIO.output(self.left_G, self.on)
+    #     GPIO.output(self.left_B, self.on)
+    #
+    #     GPIO.output(self.right_R, self.on)
+    #     GPIO.output(self.right_G, self.on)
+    #     GPIO.output(self.right_B, self.on)
 
 
-    def side_off(self, side_X):
-        GPIO.output(side_X, self.off)
+    # def side_on(self, side_X):
+    #     GPIO.output(side_X, self.on)
 
 
-    def red(self):
-        self.side_on(self.right_R)
-        self.side_on(self.left_R)
+    # def side_off(self, side_X):
+    #     GPIO.output(side_X, self.off)
 
 
-    def green(self):
-        self.side_on(self.right_G)
-        self.side_on(self.left_G)
+    # def red(self):
+    #     self.side_on(self.right_R)
+    #     self.side_on(self.left_R)
 
 
-    def blue(self):
-        self.side_on(self.right_B)
-        self.side_on(self.left_B)
+    # def green(self):
+    #     self.side_on(self.right_G)
+    #     self.side_on(self.left_G)
 
 
-    def yellow(self):
-        self.red()
-        self.green()
+    # def blue(self):
+    #     self.side_on(self.right_B)
+    #     self.side_on(self.left_B)
 
 
-    def pink(self):
-        self.red()
-        self.blue()
+    # def yellow(self):
+    #     self.red()
+    #     self.green()
 
 
-    def cyan(self):
-        self.blue()
-        self.green()
+    # def pink(self):
+    #     self.red()
+    #     self.blue()
 
 
-    def turnLeft(self):
-        GPIO.output(self.left_G, self.on)
-        GPIO.output(self.left_R, self.on)
+    # def cyan(self):
+    #     self.blue()
+    #     self.green()
 
-    def turnRight(self):
-        GPIO.output(self.right_G, self.on)
-        GPIO.output(self.right_R, self.on)
+
+    # def turnLeft(self):
+    #     GPIO.output(self.left_G, self.on)
+    #     GPIO.output(self.left_R, self.on)
+    #
+    # def turnRight(self):
+    #     GPIO.output(self.right_G, self.on)
+    #     GPIO.output(self.right_R, self.on)
 
     # Define functions which animate LEDs in various ways.
-    def setColor(self, R, G, B):
+    def set_color(self, r, g, b):
         """Wipe color across display a pixel at a time."""
-        color = Color(int(R),int(G),int(B))
+        color = Color(int(r),int(g),int(b))
         for i in range(self.strip.numPixels()):
             self.strip.setPixelColor(i, color)
             self.strip.show()
 
 
-    def setSomeColor(self, R, G, B, ID):
-        color = Color(int(R),int(G),int(B))
+    def set_some_color(self, r, g, b, ids):
+        color = Color(int(r),int(g),int(b))
         # logger.info(int(R),'  ',int(G),'  ',int(B))
-        for i in ID:
+        for i in ids:
             self.strip.setPixelColor(i, color)
             self.strip.show()
 
 
     def pause(self):
         self.lightMode = 'none'
-        self.setColor(0,0,0)
+        self.set_color(0,0,0)
         self.__flag.clear()
 
 
@@ -157,120 +158,120 @@ class RobotLight(threading.Thread):
         self.resume()
 
 
-    def policeProcessing(self):
+    def police_processing(self):
         while self.lightMode == 'police':
             for i in range(0,3):
-                self.setSomeColor(0,0,255,[0,1,2,3,4,5,6,7,8,9,10,11])
-                self.blue()
+                self.set_some_color(0,0,255,[0,1,2,3,4,5,6,7,8,9,10,11])
+                # self.blue()
                 time.sleep(0.05)
-                self.setSomeColor(0,0,0,[0,1,2,3,4,5,6,7,8,9,10,11])
-                self.both_off()
+                self.set_some_color(0,0,0,[0,1,2,3,4,5,6,7,8,9,10,11])
+                # self.both_off()
                 time.sleep(0.05)
             if self.lightMode != 'police':
                 break
             time.sleep(0.1)
             for i in range(0,3):
-                self.setSomeColor(255,0,0,[0,1,2,3,4,5,6,7,8,9,10,11])
-                self.red()
+                self.set_some_color(255,0,0,[0,1,2,3,4,5,6,7,8,9,10,11])
+                # self.red()
                 time.sleep(0.05)
-                self.setSomeColor(0,0,0,[0,1,2,3,4,5,6,7,8,9,10,11])
-                self.both_off()
+                self.set_some_color(0,0,0,[0,1,2,3,4,5,6,7,8,9,10,11])
+                # self.both_off()
                 time.sleep(0.05)
             time.sleep(0.1)
 
 
-    def breath(self, R_input, G_input, B_input):
+    def breath(self, r_input, g_input, b_input):
         self.lightMode = 'breath'
-        self.colorBreathR = R_input
-        self.colorBreathG = G_input
-        self.colorBreathB = B_input
+        self.colorBreathR = r_input
+        self.colorBreathG = g_input
+        self.colorBreathB = b_input
         self.resume()
 
 
-    def breathProcessing(self):
+    def breath_processing(self):
         while self.lightMode == 'breath':
             for i in range(0,self.breathSteps):
                 if self.lightMode != 'breath':
                     break
-                self.setColor(self.colorBreathR*i/self.breathSteps, self.colorBreathG*i/self.breathSteps, self.colorBreathB*i/self.breathSteps)
+                self.set_color(self.colorBreathR*i/self.breathSteps, self.colorBreathG*i/self.breathSteps, self.colorBreathB*i/self.breathSteps)
                 time.sleep(0.03)
             for i in range(0,self.breathSteps):
                 if self.lightMode != 'breath':
                     break
-                self.setColor(self.colorBreathR-(self.colorBreathR*i/self.breathSteps), self.colorBreathG-(self.colorBreathG*i/self.breathSteps), self.colorBreathB-(self.colorBreathB*i/self.breathSteps))
+                self.set_color(self.colorBreathR-(self.colorBreathR*i/self.breathSteps), self.colorBreathG-(self.colorBreathG*i/self.breathSteps), self.colorBreathB-(self.colorBreathB*i/self.breathSteps))
                 time.sleep(0.03)
 
 
-    def frontLight(self, switch):
-        if switch == 'on':
-            GPIO.output(6, GPIO.HIGH)
-            GPIO.output(13, GPIO.HIGH)
-        elif switch == 'off':
-            GPIO.output(5,GPIO.LOW)
-            GPIO.output(13,GPIO.LOW)
+    # def frontLight(self, switch):
+    #     if switch == 'on':
+    #         GPIO.output(6, GPIO.HIGH)
+    #         GPIO.output(13, GPIO.HIGH)
+    #     elif switch == 'off':
+    #         GPIO.output(5,GPIO.LOW)
+    #         GPIO.output(13,GPIO.LOW)
 
 
-    def switch(self, port, status):
-        if port == 1:
-            if status == 1:
-                GPIO.output(5, GPIO.HIGH)
-            elif status == 0:
-                GPIO.output(5,GPIO.LOW)
-            else:
-                pass
-        elif port == 2:
-            if status == 1:
-                GPIO.output(6, GPIO.HIGH)
-            elif status == 0:
-                GPIO.output(6,GPIO.LOW)
-            else:
-                pass
-        elif port == 3:
-            if status == 1:
-                GPIO.output(13, GPIO.HIGH)
-            elif status == 0:
-                GPIO.output(13,GPIO.LOW)
-            else:
-                pass
-        else:
-            logger.info('Wrong Command: Example--switch(3, 1)->to switch on port3')
+    # def switch(self, port, status):
+    #     if port == 1:
+    #         if status == 1:
+    #             GPIO.output(5, GPIO.HIGH)
+    #         elif status == 0:
+    #             GPIO.output(5,GPIO.LOW)
+    #         else:
+    #             pass
+    #     elif port == 2:
+    #         if status == 1:
+    #             GPIO.output(6, GPIO.HIGH)
+    #         elif status == 0:
+    #             GPIO.output(6,GPIO.LOW)
+    #         else:
+    #             pass
+    #     elif port == 3:
+    #         if status == 1:
+    #             GPIO.output(13, GPIO.HIGH)
+    #         elif status == 0:
+    #             GPIO.output(13,GPIO.LOW)
+    #         else:
+    #             pass
+    #     else:
+    #         logger.info('Wrong Command: Example--switch(3, 1)->to switch on port3')
 
 
-    def set_all_switch_off(self):
-        self.switch(1,0)
-        self.switch(2,0)
-        self.switch(3,0)
+    # def set_all_switch_off(self):
+    #     self.switch(1,0)
+    #     self.switch(2,0)
+    #     self.switch(3,0)
 
 
-    def headLight(self, switch):
-        if switch == 'on':
-            GPIO.output(5, GPIO.HIGH)
-        elif switch == 'off':
-            GPIO.output(5,GPIO.LOW)
+    # def headLight(self, switch):
+    #     if switch == 'on':
+    #         GPIO.output(5, GPIO.HIGH)
+    #     elif switch == 'off':
+    #         GPIO.output(5,GPIO.LOW)
 
 
-    def lightChange(self):
+    def light_change(self):
         if self.lightMode == 'none':
             self.pause()
         elif self.lightMode == 'police':
-            self.policeProcessing()
+            self.police_processing()
         elif self.lightMode == 'breath':
-            self.breathProcessing()
+            self.breath_processing()
 
 
     def run(self):
         while 1:
             self.__flag.wait()
-            self.lightChange()
+            self.light_change()
             pass
 
 
-if __name__ == '__main__':
-    RL=RobotLight()
-    RL.start()
-    RL.breath(70,70,255)
-    time.sleep(15)
-    RL.pause()
-    RL.frontLight('off')
-    time.sleep(2)
-    RL.police()
+# if __name__ == '__main__':
+#     RL=RobotLight()
+#     RL.start()
+#     RL.breath(70,70,255)
+#     time.sleep(15)
+#     RL.pause()
+#     RL.frontLight('off')
+#     time.sleep(2)
+#     RL.police()

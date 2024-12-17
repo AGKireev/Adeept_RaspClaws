@@ -114,10 +114,11 @@ try:
 except:
 	pass
 
-try:
-	os.system("cd //home/pi/create_ap && sudo make install")
-except:
-	pass
+# Hotspot use create_ap, deprecated, must re-factor!
+# try:
+# 	os.system("cd //home/pi/create_ap && sudo make install")
+# except:
+# 	pass
 
 for x in range(1,4):
 	if os.system("sudo apt-get install -y util-linux procps hostapd iproute2 iw haveged dnsmasq") == 0:

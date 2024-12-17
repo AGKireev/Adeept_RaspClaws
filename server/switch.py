@@ -6,6 +6,18 @@
 # Author      : William
 # Date        : 2018/08/22
 
+"""
+This script controls the single LED switches on the HAT
+connected to 3 GPIO pins.
+GPIO.setup(5, GPIO.OUT)
+GPIO.setup(6, GPIO.OUT)
+GPIO.setup(13, GPIO.OUT)
+
+"""
+
+print("Unused logic, must be refactored!")
+quit()
+
 import time
 import logging
 import RPi.GPIO as GPIO

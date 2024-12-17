@@ -19,9 +19,9 @@
 # ======================================================================
 
 # System libs
-import time
+# import time
 import threading
-import os
+# import os
 import socket
 import logging
 import asyncio
@@ -35,7 +35,7 @@ import info
 import RPIservo
 import functions
 import robotLight
-import switch
+# import switch  # The 3 single LEDs switches, we don't need them for now
 from app import WebApp
 
 logging.basicConfig(level=logging.INFO)
@@ -51,7 +51,7 @@ turnWiggle = 60
 # Initialize servo controllers using the new RPIservo code.
 # The interface remains the same as before.
 scGear = RPIservo.ServoCtrl()
-scGear.moveInit()
+scGear.move_init()
 
 P_sc = RPIservo.ServoCtrl()
 P_sc.start()
@@ -62,25 +62,20 @@ T_sc.start()
 # modeSelect = 'none'
 modeSelect = 'PT'
 
-init_pwms = scGear.initPos.copy()
+init_pwms = scGear.init_positions.copy()
 
 logger.info('Initializing functions')
 functions.Functions().start()
 
-
-def servoPosInit():
-	# This function sets initial servo positions using initConfig,
-	# which internally now uses the new servo library.
-	scGear.initConfig(2, init_pwms[2], 1)
-	P_sc.initConfig(1, init_pwms[1], 1)
-	T_sc.initConfig(0, init_pwms[0], 1)
-
-
-def ap_thread():
-	os.system("sudo create_ap wlan0 eth0 Adeept_Robot 12345678")
+# def servoPosInit():  # Unused
+# 	# This function sets initial servo positions using init_position,
+# 	# which internally now uses the new servo library.
+# 	scGear.set_init_position(2, init_pwms[2], True)
+# 	P_sc.set_init_position(1, init_pwms[1], True)
+# 	T_sc.set_init_position(0, init_pwms[0], True)
 
 
-def functionSelect(command_input, response):
+def function_select(command_input, response):
 	global direction_command, turn_command, SmoothMode, steadyMode
 
 	# The logic remains unchanged.
@@ -96,9 +91,10 @@ def functionSelect(command_input, response):
 
 	elif 'stopCV' == command_input:
 		flask_app.mode_select('none')
-		switch.switch(1,0)
-		switch.switch(2,0)
-		switch.switch(3,0)
+		# Single LEDs off (not used for now)
+		# switch.switch(1,0)
+		# switch.switch(2,0)
+		# switch.switch(3,0)
 
 	elif 'KD' == command_input:
 		move.commandInput(command_input)
@@ -122,28 +118,30 @@ def functionSelect(command_input, response):
 		RL.pause()
 
 
-def switchCtrl(command_input, response):
-	# Control switches, no servo changes here.
-	if 'Switch_1_on' in command_input:
-		switch.switch(1,1)
+# def switch_ctrl(command_input, response):
+# 	# Single LEDs management (not used for now)
+# 	pass
+	# # Control switches, no servo changes here.
+	# if 'Switch_1_on' in command_input:
+	# 	switch.switch(1,1)
+	#
+	# elif 'Switch_1_off' in command_input:
+	# 	switch.switch(1,0)
+	#
+	# elif 'Switch_2_on' in command_input:
+	# 	switch.switch(2,1)
+	#
+	# elif 'Switch_2_off' in command_input:
+	# 	switch.switch(2,0)
+	#
+	# elif 'Switch_3_on' in command_input:
+	# 	switch.switch(3,1)
+	#
+	# elif 'Switch_3_off' in command_input:
+	# 	switch.switch(3,0)
 
-	elif 'Switch_1_off' in command_input:
-		switch.switch(1,0)
 
-	elif 'Switch_2_on' in command_input:
-		switch.switch(2,1)
-
-	elif 'Switch_2_off' in command_input:
-		switch.switch(2,0)
-
-	elif 'Switch_3_on' in command_input:
-		switch.switch(3,1)
-
-	elif 'Switch_3_off' in command_input:
-		switch.switch(3,0)
-
-
-def robotCtrl(command_input, response):
+def robot_ctrl(command_input, response):
 	# Robot movements and servo adjustments through RPIservo methods.
 	# Same logic, now handled internally by the updated RPIservo code.
 
@@ -175,37 +173,36 @@ def robotCtrl(command_input, response):
 
 
 	elif 'lookleft' == command_input:
-		# P_sc.singleServo(...) now uses new servo code internally, but interface is unchanged.
-		P_sc.singleServo(12, 1, 7)
+		# P_sc.single_servo(...) now uses new servo code internally, but interface is unchanged.
+		P_sc.single_servo(12, 1, 7)
 
 	elif 'lookright' == command_input:
-		P_sc.singleServo(12,-1, 7)
+		P_sc.single_servo(12,-1, 7)
 
 	elif 'LRstop' in command_input:
-		P_sc.stopWiggle()
-
+		P_sc.stop_wiggle()
 
 	elif 'up' == command_input:
-		T_sc.singleServo(13, -1, 7)
+		T_sc.single_servo(13, -1, 7)
 
 	elif 'down' in command_input:
-		T_sc.singleServo(13, 1, 7)
+		T_sc.single_servo(13, 1, 7)
 
 	elif 'UDstop' in command_input:
-		T_sc.stopWiggle()
+		T_sc.stop_wiggle()
 
 
-def configPWM(command_input, response):
-	# Servo calibration through initConfig, still unchanged.
+def config_pwm(command_input, response):
+	# Servo calibration
 	if 'SiLeft' in command_input:
-		numServo = int(command_input[7:])
-		init_pwms[numServo] = init_pwms[numServo] - 1
-		scGear.initConfig(numServo, init_pwms[numServo], 1)
+		servo_num = int(command_input[7:])
+		init_pwms[servo_num] = init_pwms[servo_num] - 1
+		scGear.set_init_position(servo_num, init_pwms[servo_num], True)
 
 	if 'SiRight' in command_input:
-		numServo = int(command_input[7:])
-		init_pwms[numServo] = init_pwms[numServo] + 1
-		scGear.initConfig(numServo, init_pwms[numServo], 1)
+		servo_num = int(command_input[7:])
+		init_pwms[servo_num] = init_pwms[servo_num] + 1
+		scGear.set_init_position(servo_num, init_pwms[servo_num], True)
 
 	if 'PWMMS' in command_input:
 		num_servo = int(command_input[6:])
@@ -213,14 +210,13 @@ def configPWM(command_input, response):
 
 	if 'PWMINIT' == command_input:
 		for i in range(0,16):
-			scGear.initConfig(i, init_pwms[i], 1)
+			scGear.set_init_position(i, init_pwms[i], True)
 
 	if 'PWMD' in command_input:
 		reset_pwm = {}
 		for i in range(0, 16):
 			reset_pwm[f"init_pwm{i}"] = 300
 		config.write("pwm", None, reset_pwm)
-
 
 def wifi_check():
 	logger.info('Checking wifi')
@@ -231,15 +227,17 @@ def wifi_check():
 		s.close()
 		logger.info(f'IP: {ipaddr_check}')
 	except:
-		logger.warning('No wifi, starting AP..')
-		ap_threading=threading.Thread(target=ap_thread)
-		ap_threading.daemon = True
-		ap_threading.start()
-		for intensity in range(50, 256, 50):
-			RL.setColor(0, 16, intensity)
-			time.sleep(1)
-		RL.setColor(35, 255, 35)
-		logger.info('AP started')
+		logger.error('No wifi')
+		# Hotspot use create_ap, deprecated, must re-factor!
+		# logger.warning('No wifi, starting AP..')
+		# ap_threading=threading.Thread(target=ap_thread)
+		# ap_threading.daemon = True
+		# ap_threading.start()
+		# for intensity in range(50, 256, 50):
+		# 	RL.setColor(0, 16, intensity)
+		# 	time.sleep(1)
+		# RL.setColor(35, 255, 35)
+		# logger.info('AP started')
 
 
 async def check_permit(websocket):
@@ -279,10 +277,11 @@ async def recv_msg(websocket):
 
 		# Depending on the received data, call the respective functions as before
 		if isinstance(data, str):
-			robotCtrl(data, response)
-			switchCtrl(data, response)
-			functionSelect(data, response)
-			configPWM(data, response)
+			robot_ctrl(data, response)
+			# Single LEDs management (not used for now)
+			# switch_ctrl(data, response)
+			function_select(data, response)
+			config_pwm(data, response)
 
 			if 'get_info' == data:
 				response['title'] = 'get_info'
@@ -290,18 +289,20 @@ async def recv_msg(websocket):
 
 			if 'wsB' in data:
 				try:
-					set_B=data.split()
-					speed_set = int(set_B[1])
+					set_b = data.split()
+					speed_set = int(set_b[1])
 				except:
 					pass
 
 			elif 'AR' == data:
 				modeSelect = 'AR'
-				screen.screen_show(4, 'ARM MODE ON')
+				# What is this for?
+				# screen.screen_show(4, 'ARM MODE ON')
 
 			elif 'PT' == data:
 				modeSelect = 'PT'
-				screen.screen_show(4, 'PT MODE ON')
+				# What is this for?
+				# screen.screen_show(4, 'PT MODE ON')
 
 			#CVFL
 			elif 'CVFL' == data:
@@ -341,25 +342,29 @@ async def main_logic(websocket):
 	await recv_msg(websocket)
 
 def start_websocket_server():
-    async def run_server():
-        async with websockets.serve(main_logic, '0.0.0.0', 8888):
-            logger.info('WebSocket server started on port 8888')
-            await asyncio.Future()  # Run forever
+	async def run_server():
+		async with websockets.serve(main_logic, '0.0.0.0', 8888):
+			logger.info('WebSocket server started on port 8888')
+			await asyncio.Future()  # Run forever
 
-    # Create a new event loop for this thread and run the server
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(run_server())
+	# Create a new event loop for this thread and run the server
+	loop = asyncio.new_event_loop()
+	asyncio.set_event_loop(loop)
+	loop.run_until_complete(run_server())
+
 
 if __name__ == '__main__':
 	logger.info('Starting main loop')
-	switch.switchSetup()
-	switch.set_all_switch_off()
 
-	HOST = ''
-	PORT = 10223
-	BUFSIZ = 1024
-	ADDR = (HOST, PORT)
+	# LED switch setup (not used for now)
+	# switch.switchSetup()
+	# switch.set_all_switch_off()
+
+	# ??? What is this for?
+	# HOST = ''
+	# PORT = 10223
+	# BUFSIZ = 1024
+	# ADDR = (HOST, PORT)
 
 	try:
 		logger.info('Starting RobotLight')
@@ -417,5 +422,3 @@ if __name__ == '__main__':
 	# Start the WebSocket server in a new thread
 	websocket_thread = threading.Thread(target=start_websocket_server)
 	websocket_thread.start()
-
-

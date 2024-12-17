@@ -65,6 +65,9 @@ servos = [servo.Servo(pca.channels[i], min_pulse=MIN_PULSE_US, max_pulse=MAX_PUL
 class ServoCtrl(threading.Thread):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        # if the servo rotates inversely,
+        # just change the N-th number in the array to -1
+        # to reverse the direction
         self.sc_direction: List[int] = [1] * 16
         self.init_positions: List[int] = init_positions
         self.goal_positions: List[int] = [300] * 16
@@ -137,7 +140,7 @@ class ServoCtrl(threading.Thread):
         self.sc_mode = 'init'
         self.pause()
 
-    def update_init_position(self, id: int, init_input: int, move_to: bool = False) -> None:
+    def set_init_position(self, id: int, init_input: int, move_to: bool = False) -> None:
         """
         Updates the initial position of a specific servo.
 

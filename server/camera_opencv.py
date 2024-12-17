@@ -2,7 +2,7 @@ import os
 import cv2
 from base_camera import BaseCamera
 import numpy as np
-import switch
+# import switch  # The 3 single LEDs switches, we don't need them for now
 import datetime
 import Kalman_filter
 import PID
@@ -57,8 +57,9 @@ class CVThread(threading.Thread):
 	tor = 27
 
 	scGear = RPIservo.ServoCtrl()
-	scGear.moveInit()
-	switch.switchSetup()
+	scGear.move_init()
+	# Single LED switches, not used now
+	# switch.switchSetup()
 
 	def __init__(self, *args, **kwargs):
 		self.CVThreading = 0
@@ -93,65 +94,65 @@ class CVThread(threading.Thread):
 
 		self.avg = None
 		self.motionCounter = 0
-		self.lastMovtionCaptured = datetime.datetime.now()
+		self.lastMotionCaptured = datetime.datetime.now()
 		self.frameDelta = None
 		self.thresh = None
 		self.cnts = None
 
-	def mode(self, invar, imgInput):
+	def mode(self, invar, img_input):
 		self.CVMode = invar
-		self.imgCV = imgInput
+		self.imgCV = img_input
 		self.resume()
 
-	def elementDraw(self,imgInput):
+	def element_draw(self, img_input):
 		if self.CVMode == 'none':
 			pass
 
 		elif self.CVMode == 'findColor':
 			if self.findColorDetection:
-				cv2.putText(imgInput,'Target Detected',(40,60), CVThread.font, 0.5,(255,255,255),1,cv2.LINE_AA)
+				cv2.putText(img_input,'Target Detected',(40,60), CVThread.font, 0.5,(255,255,255),1,cv2.LINE_AA)
 				self.drawing = 1
 			else:
-				cv2.putText(imgInput,'Target Detecting',(40,60), CVThread.font, 0.5,(255,255,255),1,cv2.LINE_AA)
+				cv2.putText(img_input,'Target Detecting',(40,60), CVThread.font, 0.5,(255,255,255),1,cv2.LINE_AA)
 				self.drawing = 0
 
 			if self.radius > 10 and self.drawing:
-				cv2.rectangle(imgInput,(int(self.box_x-self.radius),int(self.box_y+self.radius)),(int(self.box_x+self.radius),int(self.box_y-self.radius)),(255,255,255),1)
+				cv2.rectangle(img_input,(int(self.box_x-self.radius),int(self.box_y+self.radius)),(int(self.box_x+self.radius),int(self.box_y-self.radius)),(255,255,255),1)
 
 		elif self.CVMode == 'findlineCV':
 			if frameRender:
-				imgInput = cv2.cvtColor(imgInput, cv2.COLOR_BGR2GRAY)
-				retval_bw, imgInput =  cv2.threshold(imgInput, 0, 255, cv2.THRESH_OTSU)
-				imgInput = cv2.erode(imgInput, None, iterations=6)
+				img_input = cv2.cvtColor(img_input, cv2.COLOR_BGR2GRAY)
+				retval_bw, img_input =  cv2.threshold(img_input, 0, 255, cv2.THRESH_OTSU)
+				img_input = cv2.erode(img_input, None, iterations=6)
 			try:
 				if lineColorSet == 255:
-					cv2.putText(imgInput,('Following White Line'),(30,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(128,255,128),1,cv2.LINE_AA)
+					cv2.putText(img_input, ('Following White Line'),(30,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(128,255,128),1,cv2.LINE_AA)
 				else:
-					cv2.putText(imgInput,('Following Black Line'),(30,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(128,255,128),1,cv2.LINE_AA)
+					cv2.putText(img_input, ('Following Black Line'),(30,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(128,255,128),1,cv2.LINE_AA)
 
-				cv2.line(imgInput,(self.left_Pos1,(linePos_1+30)),(self.left_Pos1,(linePos_1-30)),(255,128,64),1)
-				cv2.line(imgInput,(self.right_Pos1,(linePos_1+30)),(self.right_Pos1,(linePos_1-30)),(64,128,255),)
-				cv2.line(imgInput,(0,linePos_1),(640,linePos_1),(255,255,64),1)
+				cv2.line(img_input,(self.left_Pos1,(linePos_1+30)),(self.left_Pos1,(linePos_1-30)),(255,128,64),1)
+				cv2.line(img_input,(self.right_Pos1,(linePos_1+30)),(self.right_Pos1,(linePos_1-30)),(64,128,255),)
+				cv2.line(img_input,(0,linePos_1),(640,linePos_1),(255,255,64),1)
 
-				cv2.line(imgInput,(self.left_Pos2,(linePos_2+30)),(self.left_Pos2,(linePos_2-30)),(255,128,64),1)
-				cv2.line(imgInput,(self.right_Pos2,(linePos_2+30)),(self.right_Pos2,(linePos_2-30)),(64,128,255),1)
-				cv2.line(imgInput,(0,linePos_2),(640,linePos_2),(255,255,64),1)
+				cv2.line(img_input,(self.left_Pos2,(linePos_2+30)),(self.left_Pos2,(linePos_2-30)),(255,128,64),1)
+				cv2.line(img_input,(self.right_Pos2,(linePos_2+30)),(self.right_Pos2,(linePos_2-30)),(64,128,255),1)
+				cv2.line(img_input,(0,linePos_2),(640,linePos_2),(255,255,64),1)
 
-				cv2.line(imgInput,((self.center-20),int((linePos_1+linePos_2)/2)),((self.center+20),int((linePos_1+linePos_2)/2)),(0,0,0),1)
-				cv2.line(imgInput,((self.center),int((linePos_1+linePos_2)/2+20)),((self.center),int((linePos_1+linePos_2)/2-20)),(0,0,0),1)
+				cv2.line(img_input,((self.center-20), int((linePos_1+linePos_2)/2)),((self.center+20),int((linePos_1+linePos_2)/2)),(0,0,0),1)
+				cv2.line(img_input,((self.center), int((linePos_1+linePos_2)/2+20)),((self.center),int((linePos_1+linePos_2)/2-20)),(0,0,0),1)
 			except:
 				pass
 
 		elif self.CVMode == 'watchDog':
 			if self.drawing:
-				cv2.rectangle(imgInput, (self.mov_x, self.mov_y), (self.mov_x + self.mov_w, self.mov_y + self.mov_h), (128, 255, 0), 1)
+				cv2.rectangle(img_input, (self.mov_x, self.mov_y), (self.mov_x + self.mov_w, self.mov_y + self.mov_h), (128, 255, 0), 1)
 
-		return imgInput
+		return img_input
 
 
-	def watchDog(self, imgInput):
+	def watch_dog(self, img_input):
 		timestamp = datetime.datetime.now()
-		gray = cv2.cvtColor(imgInput, cv2.COLOR_BGR2GRAY)
+		gray = cv2.cvtColor(img_input, cv2.COLOR_BGR2GRAY)
 		gray = cv2.GaussianBlur(gray, (21, 21), 0)
 
 		if self.avg is None:
@@ -185,26 +186,28 @@ class CVThread(threading.Thread):
 			self.motionCounter += 1
 			#logger.info(motionCounter)
 			#logger.info(text)
-			self.lastMovtionCaptured = timestamp
-			led.setColor(255,78,0)
-			led.both_off()
-			led.red()
-			switch.switch(1,1)
-			switch.switch(2,1)
-			switch.switch(3,1)
+			self.lastMotionCaptured = timestamp
+			led.set_color(255,78,0)
+			# led.both_off()
+			# led.red()
+			# Single LED switches, not used now
+			# switch.switch(1,1)
+			# switch.switch(2,1)
+			# switch.switch(3,1)
 
-		if (timestamp - self.lastMovtionCaptured).seconds >= 0.5:
-			led.setColor(0,78,255)
-			led.both_off()
-			led.blue()
+		if (timestamp - self.lastMotionCaptured).seconds >= 0.5:
+			led.set_color(0,78,255)
+			# led.both_off()
+			# led.blue()
 			self.drawing = 0
-			switch.switch(1,0)
-			switch.switch(2,0)
-			switch.switch(3,0)
+			# Single LED switches, not used now
+			# switch.switch(1,0)
+			# switch.switch(2,0)
+			# switch.switch(3,0)
 		self.pause()
 
 
-	def findLineCtrl(self, posInput, setCenter):#2
+	def find_line_ctrl(self, posInput, setCenter):#2
 		if posInput and setCenter:
 			if posInput > (setCenter + findLineError):
 				#turnRight
@@ -222,7 +225,7 @@ class CVThread(threading.Thread):
 				pass
 
 
-	def findlineCV(self, frame_image):
+	def find_line_cv(self, frame_image):
 		frame_findline = cv2.cvtColor(frame_image, cv2.COLOR_BGR2GRAY)
 		retval, frame_findline =  cv2.threshold(frame_findline, 0, 255, cv2.THRESH_OTSU)
 		frame_findline = cv2.erode(frame_findline, None, iterations=6)
@@ -253,26 +256,26 @@ class CVThread(threading.Thread):
 			center = None
 			pass
 
-		self.findLineCtrl(self.center, 320)
+		self.find_line_ctrl(self.center, 320)
 		self.pause()
 
 
-	def servoMove(ID, Dir, errorInput):
+	def servo_move(ID, Dir, errorInput):
 		if ID == 12:
 			errorGenOut = CVThread.kalman_filter_X.kalman(errorInput)
 			CVThread.P_anglePos += 0.15*(errorGenOut*Dir)*CVThread.cameraDiagonalW/CVThread.videoW
 
 			if abs(errorInput) > CVThread.tor:
-				CVThread.scGear.move_angle(ID,CVThread.P_anglePos)
+				CVThread.scGear.move_angle(ID, CVThread.P_anglePos)
 				CVThread.X_lock = 0
 			else:
 				CVThread.X_lock = 1
 		elif ID == 13:
-			errorGenOut = CVThread.kalman_filter_Y.kalman(errorInput)
-			CVThread.T_anglePos += 0.15*(errorGenOut*Dir)*CVThread.cameraDiagonalH/CVThread.videoH
+			error_gen_out = CVThread.kalman_filter_Y.kalman(errorInput)
+			CVThread.T_anglePos += 0.15*(error_gen_out*Dir)*CVThread.cameraDiagonalH/CVThread.videoH
 
 			if abs(errorInput) > CVThread.tor:
-				CVThread.scGear.move_angle(ID,CVThread.T_anglePos)
+				CVThread.scGear.move_angle(ID, CVThread.T_anglePos)
 				CVThread.Y_lock = 0
 			else:
 				CVThread.Y_lock = 1
@@ -280,7 +283,7 @@ class CVThread(threading.Thread):
 			logger.info(f"No servoPort {ID} assigned.")
 
 
-	def findColor(self, frame_image):
+	def find_color(self, frame_image):
 		hsv = cv2.cvtColor(frame_image, cv2.COLOR_BGR2HSV)
 		mask = cv2.inRange(hsv, colorLower, colorUpper)#1
 		mask = cv2.erode(mask, None, iterations=2)
@@ -292,24 +295,24 @@ class CVThread(threading.Thread):
 			self.findColorDetection = 1
 			c = max(cnts, key=cv2.contourArea)
 			((self.box_x, self.box_y), self.radius) = cv2.minEnclosingCircle(c)
-			M = cv2.moments(c)
-			center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-			X = int(self.box_x)
-			Y = int(self.box_y)
-			error_Y = 240 - Y
-			error_X = 320 - X
-			CVThread.servoMove(CVThread.P_servo, CVThread.P_direction, -error_X)
-			CVThread.servoMove(CVThread.T_servo, CVThread.T_direction, -error_Y)
+			m = cv2.moments(c)
+			center = (int(m["m10"] / m["m00"]), int(m["m01"] / m["m00"]))
+			x = int(self.box_x)
+			y = int(self.box_y)
+			error_y = 240 - y
+			error_x = 320 - x
+			CVThread.servo_move(CVThread.P_servo, CVThread.P_direction, -error_x)
+			CVThread.servo_move(CVThread.T_servo, CVThread.T_direction, -error_y)
 
 			if CVThread.X_lock == 1 and CVThread.Y_lock == 1:
-				led.setColor(255,78,0)
-				led.both_off()
-				led.red()
+				led.set_color(255,78,0)
+				# led.both_off()
+				# led.red()
 				logger.info('CVThread: findColor locked')
 			else:
-				led.setColor(0,78,255)
-				led.both_off()
-				led.blue()
+				led.set_color(0,78,255)
+				# led.both_off()
+				# led.blue()
 				logger.info('CVThread: findColor unlocked')
 		else:
 			self.findColorDetection = 0
@@ -331,15 +334,15 @@ class CVThread(threading.Thread):
 				continue
 			elif self.CVMode == 'findColor':
 				self.CVThreading = 1
-				self.findColor(self.imgCV)
+				self.find_color(self.imgCV)
 				self.CVThreading = 0
 			elif self.CVMode == 'findlineCV':
 				self.CVThreading = 1
-				self.findlineCV(self.imgCV)
+				self.find_line_cv(self.imgCV)
 				self.CVThreading = 0
 			elif self.CVMode == 'watchDog':
 				self.CVThreading = 1
-				self.watchDog(self.imgCV)
+				self.watch_dog(self.imgCV)
 				self.CVThreading = 0
 			pass
 
@@ -386,30 +389,30 @@ class Camera(BaseCamera):
 		logger.info(f'Camera: colorUpper {colorUpper}')
 		logger.info(f'Camera: colorLower {colorLower}')
 
-	def modeSet(self, invar):
+	def mode_set(self, invar):
 		Camera.modeSelect = invar
 
-	def CVRunSet(self, invar):
+	def cv_run_set(self, invar):
 		global CVRun
 		CVRun = invar
 
-	def linePosSet_1(self, invar):
+	def line_pos_set_1(self, invar):
 		global linePos_1
 		linePos_1 = invar
 
-	def linePosSet_2(self, invar):
+	def line_pos_set_2(self, invar):
 		global linePos_2
 		linePos_2 = invar
 
-	def colorSet(self, invar):
+	def color_set(self, invar):
 		global lineColorSet
 		lineColorSet = invar
 
-	def randerSet(self, invar):
+	def rander_set(self, invar):
 		global frameRender
 		frameRender = invar
 
-	def errorSet(self, invar):
+	def error_set(self, invar):
 		global findLineError
 		findLineError = invar
 
