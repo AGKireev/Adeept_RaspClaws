@@ -26,7 +26,7 @@
 #
 # The original code often calls `pwm.set_all_pwm(0,0)` or `pwm.set_all_pwm(0,300)` to set all servos.
 # The adafruit_motor.servo library does not have a direct "off" function to remove all signals.
-# Instead, we set all servos to a safe neutral position (e.g. initPos or a stable angle).
+# Instead, we set all servos to a safe neutral position (e.g. init_positions or a stable angle).
 #
 # All angles and ranges remain exactly the same. We still use pwm values from 100 to 520 steps,
 # exactly as before. The RPIservo module handles conversion from these steps to servo angles,
@@ -139,7 +139,7 @@ target_Y = 0
 # Create a servo control instance from RPIservo. This replaces direct Adafruit_PCA9685 usage.
 sc = RPIservo.ServoCtrl()
 
-init_pwms = sc.initPos.copy()
+init_pwms = sc.init_positions.copy()
 
 # The following lines read initial PWM values from RPIservo.
 # RPIservo still defines init_pwm0...init_pwm15 = 300 as before.
@@ -1131,7 +1131,7 @@ def look_home():
 def release():
     logger.info("move: release()")
     # Originally: pwm.set_all_pwm(0,0)
-    # Now we set all servos to a neutral safe position (e.g. initPos or 300)
+    # Now we set all servos to a neutral safe position (e.g. init_positions or 300)
     for i in range(16):
         sc.set_servo_pwm(i, 300)
 

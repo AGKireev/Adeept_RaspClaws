@@ -21,7 +21,7 @@
 #   100 steps -> 0 degrees
 #   520 steps -> 180 degrees
 #
-# We will keep all internal arrays (initPos, goalPos, etc.) and computations in terms of these "PWM step" values.
+# We will keep all internal arrays (init_positions, goalPos, etc.) and computations in terms of these "PWM step" values.
 # Only at the point of actually commanding the servo, we will convert these step values to an angle for the servo library.
 #
 # Conversion from steps to angle:
