@@ -529,9 +529,10 @@ def right_II(pos, wiggle, heightAdjust = 0):
 
 def right_III(pos, wiggle, heightAdjust = 0):
     logger.info(f"move: right_III({pos}, {wiggle}, {heightAdjust})")
+    tempRightSide_height = False
     if pos == 0:
         sc.set_servo_pwm(10, pwm10)
-        if rightSide_height:
+        if tempRightSide_height:
             sc.set_servo_pwm(11, pwm11 + heightAdjust)
         else:
             sc.set_servo_pwm(11, pwm11 - heightAdjust)
@@ -539,50 +540,50 @@ def right_III(pos, wiggle, heightAdjust = 0):
         if rightSide_direction:
             if pos == 1:
                 sc.set_servo_pwm(10, pwm10)
-                if rightSide_height:
+                if tempRightSide_height:
                     sc.set_servo_pwm(11, pwm11 + 3 * height_change)
                 else:
                     sc.set_servo_pwm(11, pwm11 - 3 * height_change)
             elif pos == 2:
                 sc.set_servo_pwm(10, pwm10 + wiggle)
-                if rightSide_height:
+                if tempRightSide_height:
                     sc.set_servo_pwm(11, pwm11 - height_change)
                 else:
                     sc.set_servo_pwm(11, pwm11 + height_change)
             elif pos == 3:
                 sc.set_servo_pwm(10, pwm10)
-                if rightSide_height:
+                if tempRightSide_height:
                     sc.set_servo_pwm(11, pwm11 - height_change)
                 else:
                     sc.set_servo_pwm(11, pwm11 + height_change)
             elif pos == 4:
                 sc.set_servo_pwm(10, pwm10 - wiggle)
-                if rightSide_height:
+                if tempRightSide_height:
                     sc.set_servo_pwm(11, pwm11 - height_change)
                 else:
                     sc.set_servo_pwm(11, pwm11 + height_change)
         else:
             if pos == 1:
                 sc.set_servo_pwm(10, pwm10)
-                if rightSide_height:
+                if tempRightSide_height:
                     sc.set_servo_pwm(11, pwm11 + 3 * wiggle)
                 else:
                     sc.set_servo_pwm(11, pwm11 - 3 * wiggle)
             elif pos == 2:
                 sc.set_servo_pwm(10, pwm10 - wiggle)
-                if rightSide_height:
+                if tempRightSide_height:
                     sc.set_servo_pwm(11, pwm11 - wiggle)
                 else:
                     sc.set_servo_pwm(11, pwm11 + wiggle)
             elif pos == 3:
                 sc.set_servo_pwm(10, pwm10)
-                if rightSide_height:
+                if tempRightSide_height:
                     sc.set_servo_pwm(11, pwm11 - wiggle)
                 else:
                     sc.set_servo_pwm(11, pwm11 + wiggle)
             elif pos == 4:
                 sc.set_servo_pwm(10, pwm10 + wiggle)
-                if rightSide_height:
+                if tempRightSide_height:
                     sc.set_servo_pwm(11, pwm11 - wiggle)
                 else:
                     sc.set_servo_pwm(11, pwm11 + wiggle)
