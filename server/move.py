@@ -1149,7 +1149,7 @@ def destroy():
     clean_all()
 
 
-SmoothMode = 0
+SmoothMode = 1
 steadyMode = 0
 
 step_set = 1
@@ -1162,7 +1162,7 @@ turn_command = 'no'
 
 
 def move_thread():
-    logger.info("move: move_thread()")
+    logger.info("move_thread")
     global step_set
     stand_stu = 1
     if not steadyMode:
