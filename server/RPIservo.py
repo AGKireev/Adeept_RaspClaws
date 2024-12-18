@@ -69,6 +69,7 @@ class ServoCtrl(threading.Thread):
         # just change the N-th number in the array to -1
         # to reverse the direction
         self.sc_direction: List[int] = [1] * 16
+        self.sc_direction[1] = -1
         self.init_positions: List[int] = init_positions
         self.goal_positions: List[int] = [300] * 16
         self.current_positions: List[int] = [300] * 16
