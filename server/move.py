@@ -405,7 +405,7 @@ def right_I(pos, wiggle, heightAdjust = 0):
     logger.info(f"move: right_I({pos}, {wiggle}, {heightAdjust})")
     if pos == 0:
         sc.set_servo_pwm(6, pwm6)
-        if False:
+        if rightSide_height:
             sc.set_servo_pwm(7, pwm7 + heightAdjust)
         else:
             sc.set_servo_pwm(7, pwm7 - heightAdjust)
@@ -1030,7 +1030,8 @@ def steady():
 def steadyTest():
     logger.info("move: steadyTest()")
     if leftSide_direction:
-        sc.set_servo_pwm(0, pwm0 + steady_X)
+        sc.set_servo_pwm(0, pwm0 +
+                         steady_X)
         sc.set_servo_pwm(2, pwm2)
         sc.set_servo_pwm(4, pwm4 - steady_X)
     else:
