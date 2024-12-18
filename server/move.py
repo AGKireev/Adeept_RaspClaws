@@ -98,6 +98,8 @@ Up_Down_Min = 270
 look_wiggle = 30
 move_stu = 1
 
+DOVE_SPEED = 20
+
 '''
 change these variable to adjust the steady function.
 '''
@@ -403,7 +405,7 @@ def right_I(pos, wiggle, heightAdjust = 0):
     logger.info(f"move: right_I({pos}, {wiggle}, {heightAdjust})")
     if pos == 0:
         sc.set_servo_pwm(6, pwm6)
-        if rightSide_height:
+        if False:
             sc.set_servo_pwm(7, pwm7 + heightAdjust)
         else:
             sc.set_servo_pwm(7, pwm7 - heightAdjust)
@@ -1154,7 +1156,7 @@ steadyMode = 0
 
 step_set = 1
 speed_set = 100
-DPI = 17
+DPI = 25
 
 new_frame = 0
 direction_command = 'no'
@@ -1168,7 +1170,7 @@ def move_thread():
     if not steadyMode:
         if direction_command == 'forward' and turn_command == 'no':
             if SmoothMode:
-                dove(step_set, 35, 0.001, DPI, 'no')
+                dove(step_set, DOVE_SPEED, 0.001, DPI, 'no')
                 step_set += 1
                 if step_set == 5:
                     step_set = 1
@@ -1181,7 +1183,7 @@ def move_thread():
 
         elif direction_command == 'backward' and turn_command == 'no':
             if SmoothMode:
-                dove(step_set, -35, 0.001, DPI, 'no')
+                dove(step_set, DOVE_SPEED * -1, 0.001, DPI, 'no')
                 step_set += 1
                 if step_set == 5:
                     step_set = 1
