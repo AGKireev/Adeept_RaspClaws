@@ -1156,7 +1156,7 @@ steadyMode = 0
 
 step_set = 1
 speed_set = 100
-DPI = 25
+DPI = 17
 
 new_frame = 0
 direction_command = 'no'
