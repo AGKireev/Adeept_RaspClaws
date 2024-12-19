@@ -54,7 +54,9 @@ pip uninstall rpi_ws281x -y
 pip install https://github.com/rpi-ws281x/rpi-ws281x-python/releases/download/pi5-beta2/rpi_ws281x-6.0.0-cp311-cp311-linux_aarch64.whl
 pip show rpi_ws281x
 sudo ./test
-then run: ./setup_ws281x.sh
+chmod +x setup_ws281x.sh
+sudo ./setup_ws281x.sh
+sudo reboot
 
 -- ORIGINAL ROOT INSTRUCTIONS --
 First of all, the program should be done in the SD card, including writing the Raspberry Pi system, 
