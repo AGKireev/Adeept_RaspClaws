@@ -235,108 +235,54 @@ class RobotLight(threading.Thread):
 
     def firefly_processing(self):
         # Adjustable settings
-        MAX_BRIGHTNESS = 128  # Maximum brightness (0-255), limited to 50% of LED capabilities
-        MIN_BRIGHTNESS = 10  # Minimum brightness for LEDs
-        FADE_STEP = 5  # Brightness change step for gradual fade
-        FADE_INTERVAL = 0.05  # Time interval between brightness changes during fade (in seconds)
-        ON_TIME_MIN = 0.5  # Minimum duration for LED to stay at max brightness (in seconds)
-        ON_TIME_MAX = 2.0  # Maximum duration for LED to stay at max brightness (in seconds)
-        CHAOTIC_BLINK_PROBABILITY = 0.1  # Probability (0-1) that an LED will perform a chaotic blink
-        CHAOTIC_BRIGHTNESS_INCREASE_MIN = 0.1  # Minimum percentage increase for chaotic blink
-        CHAOTIC_BRIGHTNESS_INCREASE_MAX = 0.3  # Maximum percentage increase for chaotic blink
-        CHAOTIC_BLINK_DURATION_MIN = 0.1  # Minimum duration of chaotic blink (in seconds)
-        CHAOTIC_BLINK_DURATION_MAX = 0.6  # Maximum duration of chaotic blink (in seconds)
+        MAX_BRIGHTNESS = 128  # Maximum brightness (0-255)
+        MIN_BRIGHTNESS = 10  # Minimum brightness
+        FADE_STEP_MIN = 1  # Minimum step for brightness changes
+        FADE_STEP_MAX = 5  # Maximum step for brightness changes
+        UPDATE_INTERVAL = 0.05  # Time between updates
+        TWINKLE_PROBABILITY = 0.05  # Probability an LED changes its behavior
 
         # Initialize per-LED states
         leds = []
         for i in range(self.LED_COUNT):
-            # Schedule random initial delay for each LED
-            next_change_time = time.time() + random.uniform(0, 2)
             leds.append({
-                'state': 'rising',  # 'rising' or 'falling'
-                'brightness': MIN_BRIGHTNESS,
-                'next_change_time': next_change_time,
-                'on_duration': random.uniform(ON_TIME_MIN, ON_TIME_MAX)
+                'brightness': random.randint(MIN_BRIGHTNESS, MAX_BRIGHTNESS),
+                'direction': random.choice(['up', 'down']),
+                'fade_step': random.uniform(FADE_STEP_MIN, FADE_STEP_MAX),
             })
 
         while self.lightMode == 'firefly':
-            current_time = time.time()
             for i in range(self.LED_COUNT):
                 led = leds[i]
-                if current_time >= led['next_change_time']:
-                    if led['state'] == 'rising':
-                        # Increase brightness gradually
-                        led['brightness'] += FADE_STEP
-                        if led['brightness'] >= MAX_BRIGHTNESS:
-                            led['brightness'] = MAX_BRIGHTNESS
-                            led['state'] = 'falling'
-                            # Schedule time to start decreasing brightness
-                            led['next_change_time'] = current_time + led['on_duration']
-                        else:
-                            # Continue rising
-                            led['next_change_time'] = current_time + FADE_INTERVAL
-                    elif led['state'] == 'falling':
-                        # Decrease brightness gradually
-                        led['brightness'] -= FADE_STEP
-                        if led['brightness'] <= MIN_BRIGHTNESS:
-                            led['brightness'] = MIN_BRIGHTNESS
-                            led['state'] = 'rising'
-                            # Schedule next rise after a random delay
-                            led['next_change_time'] = current_time + random.uniform(ON_TIME_MIN, ON_TIME_MAX)
-                            led['on_duration'] = random.uniform(ON_TIME_MIN, ON_TIME_MAX)
-                        else:
-                            # Continue falling
-                            led['next_change_time'] = current_time + FADE_INTERVAL
 
-                    # Set LED color based on current brightness
-                    brightness = int(led['brightness'])
-                    self.strip.setPixelColor(i, rpi_ws281x.Color(brightness, brightness, brightness))
+                # Randomly decide if this LED will twinkle
+                if random.random() < TWINKLE_PROBABILITY:
+                    led['direction'] = 'up' if random.random() > 0.5 else 'down'
+                    led['fade_step'] = random.uniform(FADE_STEP_MIN, FADE_STEP_MAX)
 
-                    # Handle chaotic blink
-                    if random.random() < CHAOTIC_BLINK_PROBABILITY:
-                        # Apply chaotic blink
-                        original_brightness = brightness
-                        blink_increase = original_brightness * random.uniform(
-                            CHAOTIC_BRIGHTNESS_INCREASE_MIN,
-                            CHAOTIC_BRIGHTNESS_INCREASE_MAX
-                        )
-                        blink_brightness = min(int(original_brightness + blink_increase), MAX_BRIGHTNESS)
-                        blink_duration = random.uniform(CHAOTIC_BLINK_DURATION_MIN, CHAOTIC_BLINK_DURATION_MAX)
+                # Adjust brightness based on direction
+                if led['direction'] == 'up':
+                    led['brightness'] += led['fade_step']
+                    if led['brightness'] >= MAX_BRIGHTNESS:
+                        led['brightness'] = MAX_BRIGHTNESS
+                        led['direction'] = 'down'
+                elif led['direction'] == 'down':
+                    led['brightness'] -= led['fade_step']
+                    if led['brightness'] <= MIN_BRIGHTNESS:
+                        led['brightness'] = MIN_BRIGHTNESS
+                        led['direction'] = 'up'
 
-                        # Temporarily set increased brightness
-                        self.strip.setPixelColor(i,
-                                                 rpi_ws281x.Color(blink_brightness, blink_brightness, blink_brightness))
-                        self.strip.show()
-                        time.sleep(blink_duration)
+                # Set the LED color based on brightness
+                brightness = int(led['brightness'])
+                self.strip.setPixelColor(i, rpi_ws281x.Color(brightness, brightness, brightness))
 
-                        # Revert to original brightness
-                        self.strip.setPixelColor(i, rpi_ws281x.Color(original_brightness, original_brightness,
-                                                                     original_brightness))
-
-                else:
-                    # Handle chaotic blink even if not time to change state
-                    if random.random() < CHAOTIC_BLINK_PROBABILITY:
-                        brightness = int(led['brightness'])
-                        blink_increase = brightness * random.uniform(
-                            CHAOTIC_BRIGHTNESS_INCREASE_MIN,
-                            CHAOTIC_BRIGHTNESS_INCREASE_MAX
-                        )
-                        blink_brightness = min(int(brightness + blink_increase), MAX_BRIGHTNESS)
-                        blink_duration = random.uniform(CHAOTIC_BLINK_DURATION_MIN, CHAOTIC_BLINK_DURATION_MAX)
-
-                        # Temporarily set increased brightness
-                        self.strip.setPixelColor(i,
-                                                 rpi_ws281x.Color(blink_brightness, blink_brightness, blink_brightness))
-                        self.strip.show()
-                        time.sleep(blink_duration)
-
-                        # Revert to original brightness
-                        self.strip.setPixelColor(i, rpi_ws281x.Color(brightness, brightness, brightness))
-
+            # Show updated LED states
             self.strip.show()
-            time.sleep(0.02)  # Sleep briefly to allow smooth updates
-        self.pause()
 
+            # Sleep to allow smooth updates
+            time.sleep(UPDATE_INTERVAL)
+
+        self.pause()
 
     # def frontLight(self, switch):
     #     if switch == 'on':
