@@ -5,9 +5,9 @@ import logging
 
 # Add the parent directory of 'server' to sys.path
 script_dir = os.path.realpath(os.path.dirname(__file__))
-sys.path.append(os.path.abspath(os.path.join(script_dir, '..', 'server')))
+sys.path.append(os.path.abspath(os.path.join(script_dir, '..')))
 
-import move
+import server.move as lib_move
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -28,10 +28,10 @@ if __name__ == '__main__':
 
         # Dove test
         while 1:
-            move.dove(1,-35,0.01,17,'no')
-            move.dove(2,-35,0.01,17,'no')
-            move.dove(3,-35,0.01,17,'no')
-            move.dove(4,-35,0.01,17,'no')
+            lib_move.dove(1,-35,0.01,17,'no')
+            lib_move.dove(2,-35,0.01,17,'no')
+            lib_move.dove(3,-35,0.01,17,'no')
+            lib_move.dove(4,-35,0.01,17,'no')
 
         # Steady test
         # steady_X()
