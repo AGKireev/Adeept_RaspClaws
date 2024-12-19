@@ -235,11 +235,11 @@ class RobotLight(threading.Thread):
 
     def stars_processing(self):
         # Adjustable settings
-        MAX_BRIGHTNESS = 90  # Maximum brightness (0-255)
-        MIN_BRIGHTNESS = 3  # Minimum brightness
+        MAX_BRIGHTNESS = 70  # Maximum brightness (0-255)
+        MIN_BRIGHTNESS = 10  # Minimum brightness
         FADE_STEP_MIN = 1  # Minimum step for brightness changes
-        FADE_STEP_MAX = 15  # Maximum step for brightness changes
-        UPDATE_INTERVAL = 0.03  # Time between updates
+        FADE_STEP_MAX = 7  # Maximum step for brightness changes
+        UPDATE_INTERVAL = 0.05  # Time between updates
         TWINKLE_PROBABILITY = 0.05  # Probability an LED changes its behavior
 
         # Initialize per-LED states
