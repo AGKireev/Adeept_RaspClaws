@@ -234,46 +234,37 @@ class RobotLight(threading.Thread):
         self.resume()
 
     def firefly_processing(self):
-        # Initialize per-LED brightness parameters
+        # Initialize per-LED timers and states
         leds = []
         for i in range(self.LED_COUNT):
-            # Random start brightness between 10% and 20%
-            start_brightness = random.uniform(0.1, 0.2)
-            # Random end brightness between 30% and 60%
-            end_brightness = random.uniform(0.3, 0.6)
-            steps = 50  # Number of steps for smooth transition
-            brightness = start_brightness
-            step = (end_brightness - start_brightness) / steps
+            # Schedule random initial delay for each LED
+            next_blink_time = time.time() + random.uniform(0, 2)
             leds.append({
-                'start_brightness': start_brightness,
-                'end_brightness': end_brightness,
-                'brightness': brightness,
-                'step': step,
-                'current_step': 0,
-                'total_steps': steps
+                'next_blink_time': next_blink_time,
+                'is_on': False,
+                'off_time': 0,
+                'brightness': 0
             })
 
         while self.lightMode == 'firefly':
+            current_time = time.time()
             for i in range(self.LED_COUNT):
                 led = leds[i]
-                # Update brightness
-                led['brightness'] += led['step']
-                led['current_step'] += 1
-                # Clamp brightness between 0 and 1
-                brightness = max(0, min(led['brightness'], 1.0))
-                color_value = int(255 * brightness)
-                # Set LED color
-                self.strip.setPixelColor(i, rpi_ws281x.Color(color_value, color_value, color_value))
-                # Start a new cycle if completed
-                if led['current_step'] >= led['total_steps']:
-                    # Randomize new start and end brightness
-                    led['start_brightness'] = random.uniform(0.1, 0.2)
-                    led['end_brightness'] = random.uniform(0.3, 0.6)
-                    led['brightness'] = led['start_brightness']
-                    led['current_step'] = 0
-                    led['step'] = (led['end_brightness'] - led['start_brightness']) / led['total_steps']
+                if not led['is_on'] and current_time >= led['next_blink_time']:
+                    # Turn on the LED with random brightness
+                    led['is_on'] = True
+                    led['brightness'] = random.randint(50, 255)  # Random brightness between 50 and 255
+                    led['off_time'] = current_time + random.uniform(0.1, 0.5)  # Random duration
+                    self.strip.setPixelColor(i,
+                                             rpi_ws281x.Color(led['brightness'], led['brightness'], led['brightness']))
+                elif led['is_on'] and current_time >= led['off_time']:
+                    # Turn off the LED
+                    led['is_on'] = False
+                    self.strip.setPixelColor(i, rpi_ws281x.Color(0, 0, 0))
+                    # Schedule the next blink with a random delay
+                    led['next_blink_time'] = current_time + random.uniform(0.5, 2)
             self.strip.show()
-            time.sleep(0.05)  # Adjust for smoothness
+            time.sleep(0.02)  # Adjust the sleep time for smoothness
         self.pause()
 
 
