@@ -7,7 +7,7 @@ import logging
 script_dir = os.path.realpath(os.path.dirname(__file__))
 sys.path.append(os.path.abspath(os.path.join(script_dir, '..', 'server')))
 
-import RPIservo
+import move
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -28,10 +28,10 @@ if __name__ == '__main__':
 
         # Dove test
         while 1:
-            dove(1,-35,0.01,17,'no')
-            dove(2,-35,0.01,17,'no')
-            dove(3,-35,0.01,17,'no')
-            dove(4,-35,0.01,17,'no')
+            move.dove(1,-35,0.01,17,'no')
+            move.dove(2,-35,0.01,17,'no')
+            move.dove(3,-35,0.01,17,'no')
+            move.dove(4,-35,0.01,17,'no')
 
         # Steady test
         # steady_X()
