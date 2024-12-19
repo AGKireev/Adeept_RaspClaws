@@ -234,17 +234,46 @@ class RobotLight(threading.Thread):
         self.resume()
 
     def firefly_processing(self):
+        # Initialize per-LED brightness parameters
+        leds = []
+        for i in range(self.LED_COUNT):
+            # Random start brightness between 10% and 20%
+            start_brightness = random.uniform(0.1, 0.2)
+            # Random end brightness between 30% and 60%
+            end_brightness = random.uniform(0.3, 0.6)
+            steps = 50  # Number of steps for smooth transition
+            brightness = start_brightness
+            step = (end_brightness - start_brightness) / steps
+            leds.append({
+                'start_brightness': start_brightness,
+                'end_brightness': end_brightness,
+                'brightness': brightness,
+                'step': step,
+                'current_step': 0,
+                'total_steps': steps
+            })
+
         while self.lightMode == 'firefly':
-            if self.lightMode != 'firefly':
-                break
-            led = random.randint(0, self.LED_COUNT - 1)
-            color = rpi_ws281x.Color(255, 255, 255)
-            self.strip.setPixelColor(led, color)
+            for i in range(self.LED_COUNT):
+                led = leds[i]
+                # Update brightness
+                led['brightness'] += led['step']
+                led['current_step'] += 1
+                # Clamp brightness between 0 and 1
+                brightness = max(0, min(led['brightness'], 1.0))
+                color_value = int(255 * brightness)
+                # Set LED color
+                self.strip.setPixelColor(i, rpi_ws281x.Color(color_value, color_value, color_value))
+                # Start a new cycle if completed
+                if led['current_step'] >= led['total_steps']:
+                    # Randomize new start and end brightness
+                    led['start_brightness'] = random.uniform(0.1, 0.2)
+                    led['end_brightness'] = random.uniform(0.3, 0.6)
+                    led['brightness'] = led['start_brightness']
+                    led['current_step'] = 0
+                    led['step'] = (led['end_brightness'] - led['start_brightness']) / led['total_steps']
             self.strip.show()
-            time.sleep(random.uniform(0.05, 0.2))
-            self.strip.setPixelColor(led, 0)
-            self.strip.show()
-            time.sleep(random.uniform(0.05, 0.2))
+            time.sleep(0.05)  # Adjust for smoothness
         self.pause()
 
 
