@@ -45,8 +45,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 # logging.getLogger('websockets').setLevel(logging.INFO)
 
+shutdown_called = False
 
 def graceful_shutdown(*args):
+	global shutdown_called
+	if shutdown_called:
+		return
+	shutdown_called = True
+
 	logger.info("Gracefully shutting down...")
 	try:
 		if RL:
