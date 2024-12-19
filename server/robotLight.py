@@ -229,17 +229,17 @@ class RobotLight(threading.Thread):
             pos -= 170
             return rpi_ws281x.Color(0, pos * 3, 255 - pos * 3)
 
-    def firefly(self):
-        self.lightMode = 'firefly'
+    def stars(self):
+        self.lightMode = 'stars'
         self.resume()
 
-    def firefly_processing(self):
+    def stars_processing(self):
         # Adjustable settings
-        MAX_BRIGHTNESS = 128  # Maximum brightness (0-255)
-        MIN_BRIGHTNESS = 10  # Minimum brightness
+        MAX_BRIGHTNESS = 90  # Maximum brightness (0-255)
+        MIN_BRIGHTNESS = 3  # Minimum brightness
         FADE_STEP_MIN = 1  # Minimum step for brightness changes
-        FADE_STEP_MAX = 5  # Maximum step for brightness changes
-        UPDATE_INTERVAL = 0.05  # Time between updates
+        FADE_STEP_MAX = 15  # Maximum step for brightness changes
+        UPDATE_INTERVAL = 0.03  # Time between updates
         TWINKLE_PROBABILITY = 0.05  # Probability an LED changes its behavior
 
         # Initialize per-LED states
@@ -251,7 +251,7 @@ class RobotLight(threading.Thread):
                 'fade_step': random.uniform(FADE_STEP_MIN, FADE_STEP_MAX),
             })
 
-        while self.lightMode == 'firefly':
+        while self.lightMode == 'stars':
             for i in range(self.LED_COUNT):
                 led = leds[i]
 
@@ -341,8 +341,8 @@ class RobotLight(threading.Thread):
             self.breath_processing()
         elif self.lightMode == 'rainbow':
             self.rainbow_processing()
-        elif self.lightMode == 'firefly':
-            self.firefly_processing()
+        elif self.lightMode == 'stars':
+            self.stars_processing()
 
 
     def run(self):
