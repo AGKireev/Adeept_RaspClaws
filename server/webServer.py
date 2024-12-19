@@ -370,7 +370,9 @@ if __name__ == '__main__':
 		logger.info('Starting RobotLight')
 		RL = robotLight.RobotLight()
 		RL.start()
-		RL.breath(70,70,255)
+		# RL.breath(70,70,255)
+		RL.rainbow()
+		RL.firefly()
 	except Exception as e:
 		logger.error(f'Failed to start RobotLight with exception: {e}')
 		RL = None

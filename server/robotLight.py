@@ -1,6 +1,7 @@
 import time
 import threading
 import logging
+import random
 import rpi_ws281x
 # import RPi.GPIO as GPIO
 
@@ -201,6 +202,51 @@ class RobotLight(threading.Thread):
                 self.set_color(self.colorBreathR-(self.colorBreathR*i/self.breathSteps), self.colorBreathG-(self.colorBreathG*i/self.breathSteps), self.colorBreathB-(self.colorBreathB*i/self.breathSteps))
                 time.sleep(0.03)
 
+    def rainbow(self):
+        self.lightMode = 'rainbow'
+        self.resume()
+
+    def rainbow_processing(self):
+        while self.lightMode == 'rainbow':
+            for j in range(256):
+                if self.lightMode != 'rainbow':
+                    break
+                for i in range(self.LED_COUNT):
+                    pixel_index = (i * 256 // self.LED_COUNT) + j
+                    self.strip.setPixelColor(i, self.wheel(pixel_index & 255))
+                self.strip.show()
+                time.sleep(0.02)
+        self.pause()
+
+    def wheel(self, pos):
+        """Generate rainbow colors across 0-255 positions."""
+        if pos < 85:
+            return rpi_ws281x.Color(pos * 3, 255 - pos * 3, 0)
+        elif pos < 170:
+            pos -= 85
+            return rpi_ws281x.Color(255 - pos * 3, 0, pos * 3)
+        else:
+            pos -= 170
+            return rpi_ws281x.Color(0, pos * 3, 255 - pos * 3)
+
+    def firefly(self):
+        self.lightMode = 'firefly'
+        self.resume()
+
+    def firefly_processing(self):
+        while self.lightMode == 'firefly':
+            if self.lightMode != 'firefly':
+                break
+            led = random.randint(0, self.LED_COUNT - 1)
+            color = rpi_ws281x.Color(255, 255, 255)
+            self.strip.setPixelColor(led, color)
+            self.strip.show()
+            time.sleep(random.uniform(0.05, 0.2))
+            self.strip.setPixelColor(led, 0)
+            self.strip.show()
+            time.sleep(random.uniform(0.05, 0.2))
+        self.pause()
+
 
     # def frontLight(self, switch):
     #     if switch == 'on':
@@ -257,6 +303,10 @@ class RobotLight(threading.Thread):
             self.police_processing()
         elif self.lightMode == 'breath':
             self.breath_processing()
+        elif self.lightMode == 'rainbow':
+            self.rainbow_processing()
+        elif self.lightMode == 'firefly':
+            self.firefly_processing()
 
 
     def run(self):
