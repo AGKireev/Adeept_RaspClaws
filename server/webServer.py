@@ -34,8 +34,8 @@ import json
 import config
 import functions
 import servo
-from server.system import info
-from server.light import strip
+from system import info
+from light import strip
 # import switch  # The 3 single LEDs switches, we don't need them for now
 from app import WebApp
 

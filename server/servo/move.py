@@ -43,9 +43,9 @@ import threading
 import logging
 from mpu6050 import mpu6050
 
-from server.servo import base
-from server.system.kalman_filter import KalmanFilter
-from server import PID
+from ..servo import base
+from ..system.kalman_filter import KalmanFilter
+from .. import PID
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

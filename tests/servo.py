@@ -7,11 +7,11 @@ from typing import List
 from adafruit_pca9685 import PCA9685
 from adafruit_motor.servo import Servo
 from board import SCL, SDA
-from server.servo import base
 
 # Add the parent directory of 'server' to sys.path
 script_dir = os.path.realpath(os.path.dirname(__file__))
 sys.path.append(os.path.abspath(os.path.join(script_dir, '..', 'server')))
+from servo import base
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)

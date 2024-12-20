@@ -11,9 +11,9 @@ import imutils
 import logging
 from picamera2 import Picamera2
 
-from server import servo
-from server import light
-from server.system.kalman_filter import KalmanFilter
+from .. import servo
+from .. import light
+from ..system.kalman_filter import KalmanFilter
 
 # os.environ["LIBCAMERA_LOG_LEVELS"] = "2"
 # logging.getLogger('picamera2').setLevel(logging.INFO)
