@@ -1,9 +1,12 @@
-# Adeept_RaspClaws
+# IMPORTANT!
+WORK-IN-PROGRESS!
 Build was tested on:
-Adeept RaspClaws
+Adeept RaspClaws robot
 Raspberry Pi 5 8Gb
-Camera Module 3 (IMX708)
+Camera Module 3 (IMX708) -> changed from the stock one!
 Python 3.11
+
+FOR THIS SETUP YOU'll NEED BETTER BATTERIES THAN INCLUDED! 
 
 # How to set env
 cd /home/USERNAME
