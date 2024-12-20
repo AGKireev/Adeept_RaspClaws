@@ -36,7 +36,7 @@ import functions
 from servo.base import ServoCtrl
 from servo import move
 from system import info
-from light import strip
+from light.strip import LightStrip
 # import switch  # The 3 single LEDs switches, we don't need them for now
 from app import WebApp
 
@@ -399,14 +399,14 @@ if __name__ == '__main__':
 	# ADDR = (HOST, PORT)
 
 	try:
-		logger.info('Starting RobotLight')
-		RL = robotLight.RobotLight()
+		logger.info('Starting LightStrip')
+		RL = LightStrip()
 		RL.start()
 		# RL.breath(70,70,255)
 		# RL.rainbow()
 		RL.stars()
 	except Exception as e:
-		logger.error(f'Failed to start RobotLight with exception: {e}')
+		logger.error(f'Failed to start LightStrip with exception: {e}')
 		RL = None
 
 	# global flask_app

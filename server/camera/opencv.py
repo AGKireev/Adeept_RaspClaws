@@ -11,7 +11,7 @@ import logging
 from picamera2 import Picamera2
 
 import servo
-import light
+from light.strip import LightStrip
 from camera.base import BaseCamera
 from system.kalman_filter import KalmanFilter
 
@@ -21,7 +21,7 @@ from system.kalman_filter import KalmanFilter
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-light_strip = light.strip.RobotLight()
+light_strip = LightStrip()
 # pid = PID.PID()
 # pid.SetKp(0.5)
 # pid.SetKd(0)

@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class RobotLight(threading.Thread):
+class LightStrip(threading.Thread):
     def __init__(self, *args, **kwargs):
         self.LED_COUNT	  	= 16	  # Number of LED pixels.
         self.LED_PIN		= 12	  # GPIO pin connected to the pixels (18 uses PWM!).
@@ -56,7 +56,7 @@ class RobotLight(threading.Thread):
         # Initialize the library (must be called once before other functions).
         self.strip.begin()
 
-        super(RobotLight, self).__init__(*args, **kwargs)
+        super(LightStrip, self).__init__(*args, **kwargs)
         self.__flag = threading.Event()
         self.__flag.clear()
 
