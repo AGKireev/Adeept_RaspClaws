@@ -152,6 +152,8 @@ class CVThread(threading.Thread):
 
 
 	def watch_dog(self, img_input):
+		logger.info('watchDog.started')
+
 		timestamp = datetime.datetime.now()
 		gray = cv2.cvtColor(img_input, cv2.COLOR_BGR2GRAY)
 		gray = cv2.GaussianBlur(gray, (21, 21), 0)
@@ -173,6 +175,10 @@ class CVThread(threading.Thread):
 			cv2.CHAIN_APPROX_SIMPLE)
 		self.cnts = imutils.grab_contours(self.cnts)
 		# logger.info('x')
+
+		logger.info('watchDog: contours')
+		logger.info(self.cnts)
+
 		# loop over the contours
 		for c in self.cnts:
 			# if the contour is too small, ignore it
@@ -197,6 +203,7 @@ class CVThread(threading.Thread):
 			# switch.switch(3,1)
 
 		if (timestamp - self.lastMotionCaptured).seconds >= 0.5:
+			logger.info('watchDog: no motion detected')
 			# light_strip.set_color(0,78,255)
 			# leds.both_off()
 			# leds.blue()

@@ -1,43 +1,3 @@
-#! /usr/bin/env python3
-# File name   : move.py
-# Description : Controlling all servos
-# Website     : www.adeept.com
-# E-mail      : support@adeept.com
-# Author      : William
-# Date        : 2019/04/08
-
-# ======================================================================
-# IMPORTANT UPDATE NOTES FOR COMPATIBILITY WITH NEW LIBRARIES:
-#
-# This script originally used Adafruit_PCA9685 directly (pwm.set_pwm) and mpu6050, PID, etc.
-# We are now using the updated base.py script, which itself uses Adafruit's CircuitPython
-# libraries (adafruit_pca9685 and adafruit_motor.servo) internally. We must keep all function
-# names, variables, logic, and comments the same, only replacing the direct pwm calls with
-# `sc.set_servo_pwm(channel, value)` calls through the servo control instance
-#
-# The original code used:
-#   pwm = Adafruit_PCA9685.PCA9685()
-#   pwm.set_pwm_freq(50)
-# and then pwm.set_pwm(...) to position servos.
-#
-# Now, we:
-#   - Import servo and create a ServoCtrl instance `sc` to handle servo positioning.
-#   - Use sc.set_servo_pwm(channel, pwm_value) to set servo positions.
-#
-# The original code often calls `pwm.set_all_pwm(0,0)` or `pwm.set_all_pwm(0,300)` to set all servos.
-# The adafruit_motor.servo library does not have a direct "off" function to remove all signals.
-# Instead, we set all servos to a safe neutral position (e.g. init_positions or a stable angle).
-#
-# All angles and ranges remain exactly the same. We still use pwm values from 100 to 520 steps,
-# exactly as before. The servo module handles conversion from these steps to servo angles,
-# ensuring no damage will occur.
-#
-# We keep all original comments and function names unchanged, only changing the underlying
-# method of setting servo pulses.
-#
-# PLEASE REVIEW THIS UPDATED CODE BEFORE RUNNING.
-# ======================================================================
-
 import time
 import threading
 import logging
@@ -50,14 +10,10 @@ import PID
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-'''
-change this variables to 0 to reverse all the servos.
-'''
+# Change this variables to 0 to reverse all the servos.
 set_direction = 1
 
-'''
-change these two variables to reverse the direction of the legs.
-'''
+# Change these two variables to reverse the direction of the legs.
 if set_direction:
     leftSide_direction = 1
     rightSide_direction = 0
@@ -65,9 +21,7 @@ else:
     leftSide_direction = 0
     rightSide_direction = 1
 
-'''
-change these two variables to reverse the height of the legs.
-'''
+# Change these two variables to reverse the height of the legs.
 if set_direction:
     leftSide_height = 0
     rightSide_height = 1
@@ -75,20 +29,17 @@ else:
     leftSide_height = 1
     rightSide_height = 0
 
-'''
-change this variable to set the range of the height range.
-'''
+# Change this variable to set the range of the height range.
 height_change = 30
 
-'''
-change these two variables to adjust the function for observing.
-'''
+# Change these two variables to adjust the function for observing.
 if set_direction:
     Up_Down_direction = 1
     Left_Right_direction = 1
 else:
     Up_Down_direction = 0
     Left_Right_direction = 0
+
 Left_Right_input = 300
 Up_Down_input = 300
 Left_Right_Max = 500
@@ -100,9 +51,7 @@ move_stu = 1
 
 DOVE_SPEED = 20
 
-'''
-change these variable to adjust the steady function.
-'''
+# Change these variable to adjust the steady function.
 steady_range_Min = -40
 steady_range_Max = 130
 range_Mid = (steady_range_Min + steady_range_Max) / 2
