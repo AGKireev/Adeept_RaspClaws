@@ -1,19 +1,19 @@
 # import os
 import cv2
-from base_camera import BaseCamera
+from server.camera.base import BaseCamera
 import numpy as np
 # import switch  # The 3 single LEDs switches, we don't need them for now
 import datetime
-import Kalman_filter
 # import PID
 import time
 import threading
 import imutils
-# import robotLight
-import RPIservo
-import move
 import logging
 from picamera2 import Picamera2
+
+from server import servo
+from server import light
+from server.system.kalman_filter import KalmanFilter
 
 # os.environ["LIBCAMERA_LOG_LEVELS"] = "2"
 # logging.getLogger('picamera2').setLevel(logging.INFO)
@@ -21,7 +21,7 @@ from picamera2 import Picamera2
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# led = robotLight.RobotLight()
+light_strip = light.strip.RobotLight()
 # pid = PID.PID()
 # pid.SetKp(0.5)
 # pid.SetKd(0)
@@ -40,8 +40,8 @@ colorLower = np.array([24, 100, 100])
 class CVThread(threading.Thread):
 	font = cv2.FONT_HERSHEY_SIMPLEX
 
-	kalman_filter_X = Kalman_filter.Kalman_filter(0.01,0.1)
-	kalman_filter_Y = Kalman_filter.Kalman_filter(0.01,0.1)
+	kalman_filter_X = KalmanFilter(0.01, 0.1)
+	kalman_filter_Y = KalmanFilter(0.01, 0.1)
 	P_direction = -1
 	T_direction = 1
 	P_servo = 12
@@ -56,7 +56,8 @@ class CVThread(threading.Thread):
 	X_lock = 0
 	tor = 27
 
-	scGear = RPIservo.ServoCtrl()
+	# TODO: MUST be inited from webServer and passed!
+	scGear = servo.base.ServoCtrl()
 	scGear.move_init()
 	# Single LED switches, not used now
 	# switch.switchSetup()
@@ -187,18 +188,18 @@ class CVThread(threading.Thread):
 			#logger.info(motionCounter)
 			#logger.info(text)
 			self.lastMotionCaptured = timestamp
-			led.set_color(255,78,0)
-			# led.both_off()
-			# led.red()
+			light_strip.set_color(255,78,0)
+			# leds.both_off()
+			# leds.red()
 			# Single LED switches, not used now
 			# switch.switch(1,1)
 			# switch.switch(2,1)
 			# switch.switch(3,1)
 
 		if (timestamp - self.lastMotionCaptured).seconds >= 0.5:
-			led.set_color(0,78,255)
-			# led.both_off()
-			# led.blue()
+			light_strip.set_color(0,78,255)
+			# leds.both_off()
+			# leds.blue()
 			self.drawing = 0
 			# Single LED switches, not used now
 			# switch.switch(1,0)
@@ -210,17 +211,15 @@ class CVThread(threading.Thread):
 	def find_line_ctrl(self, posInput, setCenter):#2
 		if posInput and setCenter:
 			if posInput > (setCenter + findLineError):
-				#turnRight
-				move.commandInput('right')
+				servo.move.command('right')
 				logger.info('CVThread: findLineCtrl right')
 				pass
 			elif posInput < (setCenter - findLineError):
-				#turnLeft
-				move.commandInput('left')
+				servo.move.command('left')
 				logger.info('CVThread: findLineCtrl left')
 				pass
 			else:
-				move.commandInput('forward')
+				servo.move.command('forward')
 				time.sleep(1)
 				pass
 
@@ -329,8 +328,8 @@ class CVThread(threading.Thread):
 		while 1:
 			self.__flag.wait()
 			if self.CVMode == 'none':
-				move.commandInput('stand')
-				move.commandInput('no')
+				servo.move.command('stand')
+				servo.move.command('no')
 				continue
 			elif self.CVMode == 'findColor':
 				self.CVThreading = 1

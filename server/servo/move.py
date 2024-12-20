@@ -10,10 +10,10 @@
 # IMPORTANT UPDATE NOTES FOR COMPATIBILITY WITH NEW LIBRARIES:
 #
 # This script originally used Adafruit_PCA9685 directly (pwm.set_pwm) and mpu6050, PID, etc.
-# We are now using the updated RPIservo.py script, which itself uses Adafruit's CircuitPython
+# We are now using the updated base.py script, which itself uses Adafruit's CircuitPython
 # libraries (adafruit_pca9685 and adafruit_motor.servo) internally. We must keep all function
 # names, variables, logic, and comments the same, only replacing the direct pwm calls with
-# `sc.set_servo_pwm(channel, value)` calls through the servo control instance from RPIservo.
+# `sc.set_servo_pwm(channel, value)` calls through the servo control instance
 #
 # The original code used:
 #   pwm = Adafruit_PCA9685.PCA9685()
@@ -21,7 +21,7 @@
 # and then pwm.set_pwm(...) to position servos.
 #
 # Now, we:
-#   - Import RPIservo and create a ServoCtrl instance `sc` to handle servo positioning.
+#   - Import servo and create a ServoCtrl instance `sc` to handle servo positioning.
 #   - Use sc.set_servo_pwm(channel, pwm_value) to set servo positions.
 #
 # The original code often calls `pwm.set_all_pwm(0,0)` or `pwm.set_all_pwm(0,300)` to set all servos.
@@ -29,7 +29,7 @@
 # Instead, we set all servos to a safe neutral position (e.g. init_positions or a stable angle).
 #
 # All angles and ranges remain exactly the same. We still use pwm values from 100 to 520 steps,
-# exactly as before. The RPIservo module handles conversion from these steps to servo angles,
+# exactly as before. The servo module handles conversion from these steps to servo angles,
 # ensuring no damage will occur.
 #
 # We keep all original comments and function names unchanged, only changing the underlying
@@ -43,9 +43,9 @@ import threading
 import logging
 from mpu6050 import mpu6050
 
-import RPIservo
-import Kalman_filter
-import PID
+from server.servo import base
+from server.system.kalman_filter import KalmanFilter
+from server import PID
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -126,8 +126,8 @@ Y_pid.SetKp(P)
 Y_pid.SetKd(I)
 Y_pid.SetKi(D)
 
-kalman_filter_X = Kalman_filter.Kalman_filter(0.001, 0.1)
-kalman_filter_Y = Kalman_filter.Kalman_filter(0.001, 0.1)
+kalman_filter_X = KalmanFilter(0.001, 0.1)
+kalman_filter_Y = KalmanFilter(0.001, 0.1)
 
 try:
     sensor = mpu6050(0x68)
@@ -138,13 +138,12 @@ except:
 target_X = 0
 target_Y = 0
 
-# Create a servo control instance from RPIservo. This replaces direct Adafruit_PCA9685 usage.
-sc = RPIservo.ServoCtrl()
+# Create a servo control instance. This replaces direct Adafruit_PCA9685 usage.
+sc = base.ServoCtrl()
 
 init_pwms = sc.init_positions.copy()
 
-# The following lines read initial PWM values from RPIservo.
-# RPIservo still defines init_pwm0...init_pwm15 = 300 as before.
+# Read initial PWM values
 pwm0 = init_pwms[0]
 pwm1 = init_pwms[1]
 pwm2 = init_pwms[2]
@@ -203,7 +202,7 @@ def ctrl_range(raw, max_genout, min_genout):
 
 # All functions below using pwm.set_pwm must be replaced with sc.set_servo_pwm.
 # The logic remains the same, only the function call changes.
-# The pwmN variables represent the initial PWM steps from RPIservo.init_pwmN variables.
+# The pwmN variables represent the initial PWM steps.
 # This ensures the exact same behavior as original.
 
 def left_I(pos, wiggle, heightAdjust = 0):
@@ -1240,8 +1239,8 @@ rm.start()
 rm.pause()
 
 
-def commandInput(command_input):
-    logger.info(f"move: commandInput({command_input})")
+def command(command_input):
+    logger.info(f"move: command({command_input})")
     global direction_command, turn_command, SmoothMode, steadyMode
     if 'forward' == command_input:
         direction_command = 'forward'

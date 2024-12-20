@@ -41,7 +41,7 @@ from board import SCL, SDA
 import busio
 import adafruit_pca9685
 from adafruit_motor import servo
-import config
+from server import config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

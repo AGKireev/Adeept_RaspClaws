@@ -1,21 +1,20 @@
 # ======================================================================
 # IMPORTANT UPDATE NOTES FOR COMPATIBILITY WITH NEW LIBRARIES:
 #
-# This script uses RPIservo.py, which was refactored
+# This script uses base.py, which was refactored
 # to use the new Adafruit CircuitPython libraries (adafruit_pca9685 and adafruit_motor.servo) instead
 # of the old RPi.GPIO and Adafruit_PCA9685 Python libraries. The underlying servo control logic in
-# RPIservo.py has been preserved to ensure the exact same functionality, ranges, and movement logic.
+# base.py has been preserved to ensure the exact same functionality, ranges, and movement logic.
 # All function names, behavior, and variable usage remain unchanged, so other external scripts depending
 # on these functions will still work.
 #
 # Key points:
-# - We still call RPIservo.ServoCtrl() and related methods in exactly the same way.
-# - Internally, RPIservo.py now converts the old "PWM steps" to servo angles and sets them using the new
+# - Internally, servo logic now converts the old "PWM steps" to servo angles and sets them using the new
 #   libraries. We have ensured that the min/max ranges, angles, and speed profiles are exactly the same,
 #   so the servos will move as before and not be damaged.
 # - This webServer.py script does not directly control the PWM or import old servo libraries anymore; it
-#   solely relies on RPIservo.py for servo actions. Therefore, we do not have to change logic here, only
-#   confirm that we are now using the updated RPIservo.py module.
+#   solely relies on base.py for servo actions. Therefore, we do not have to change logic here, only
+#   confirm that we are now using the updated base.py module.
 # ======================================================================
 
 # System libs
@@ -33,11 +32,10 @@ import json
 
 # Custom modules
 import config
-import move
-import info
-import RPIservo
 import functions
-import robotLight
+import servo
+from server.system import info
+from server.light import strip
 # import switch  # The 3 single LEDs switches, we don't need them for now
 from app import WebApp
 
@@ -73,15 +71,14 @@ speed_set = 100
 rad = 0.5
 turnWiggle = 60
 
-# Initialize servo controllers using the new RPIservo code.
-# The interface remains the same as before.
-scGear = RPIservo.ServoCtrl()
+# Initialize servo controllers
+scGear = servo.base.ServoCtrl()
 scGear.move_init()
 
-P_sc = RPIservo.ServoCtrl()
+P_sc = servo.base.ServoCtrl()
 P_sc.start()
 
-T_sc = RPIservo.ServoCtrl()
+T_sc = servo.base.ServoCtrl()
 T_sc.start()
 
 # Register graceful shutdown
@@ -127,13 +124,13 @@ def function_select(command_input, response):
 		# switch.switch(3,0)
 
 	elif 'KD' == command_input:
-		move.commandInput(command_input)
+		servo.move.command(command_input)
 
 	elif 'automaticOff' == command_input:
-		move.commandInput(command_input)
+		servo.move.command(command_input)
 
 	elif 'automatic' == command_input:
-		move.commandInput(command_input)
+		servo.move.command(command_input)
 
 	elif 'trackLine' == command_input:
 		flask_app.mode_select('findlineCV')
@@ -172,34 +169,38 @@ def function_select(command_input, response):
 
 
 def robot_ctrl(command_input, response):
-	# Robot movements and servo adjustments through RPIservo methods.
-	# Same logic, now handled internally by the updated RPIservo code.
+	"""
+	Robot movements and servo adjustments.
+	:param command_input:
+	:param response:
+	:return:
+	"""
 
 	global direction_command, turn_command
 	if 'forward' == command_input:
 		direction_command = 'forward'
-		move.commandInput(direction_command)
+		servo.move.command(direction_command)
 
 	elif 'backward' == command_input:
 		direction_command = 'backward'
-		move.commandInput(direction_command)
+		servo.move.command(direction_command)
 
 	elif 'DS' in command_input:
 		direction_command = 'stand'
-		move.commandInput(direction_command)
+		servo.move.command(direction_command)
 
 
 	elif 'left' == command_input:
 		turn_command = 'left'
-		move.commandInput(turn_command)
+		servo.move.command(turn_command)
 
 	elif 'right' == command_input:
 		turn_command = 'right'
-		move.commandInput(turn_command)
+		servo.move.command(turn_command)
 
 	elif 'TS' in command_input:
 		turn_command = 'no'
-		move.commandInput(turn_command)
+		servo.move.command(turn_command)
 
 
 	elif 'lookleft' == command_input:

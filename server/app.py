@@ -3,7 +3,7 @@ from flask import Flask, Response, send_from_directory
 from flask_cors import CORS
 import threading
 import logging
-from camera_opencv import Camera
+from server.camera.opencv import Camera
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ class WebApp:
         logger.info('WebApp: start_thread')
 
         fps_threading = threading.Thread(target=self.thread)
-        # Set daemon to False to prevent abrupt termination of the thread
+        # Set daemon to False in order to prevent abrupt termination of the thread
         fps_threading.setDaemon(False)
         fps_threading.start()
         logger.info('WebApp: start_thread done')

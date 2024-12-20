@@ -4,20 +4,20 @@ import logging
 from mpu6050 import mpu6050
 
 import config
-import Kalman_filter
-import RPIservo
+from server.system.kalman_filter import KalmanFilter
+from server.servo import base
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 logger.info('Functions: starting..')
 
-# Initialize the servo control instance from RPIservo
-logger.info('Functions: initializing RPIservo')
-scGear = RPIservo.ServoCtrl()
+# Initialize the servo control
+logger.info('Functions: initializing servo')
+scGear = base.ServoCtrl()
 
 # Initialize Kalman filter for X axis
-kalman_filter_X = Kalman_filter.Kalman_filter(0.01, 0.1)
+kalman_filter_X = KalmanFilter(0.01, 0.1)
 
 # Initialize MPU6050 sensor
 logger.info('Functions: initializing MPU6050')

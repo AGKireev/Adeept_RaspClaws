@@ -1,5 +1,5 @@
 #!/usr/bin/env/python
-# File name   : switch.py
+# File name   : leds.py
 # Production  : HAT
 # Website     : www.adeept.com
 # E-mail      : support@adeept.com

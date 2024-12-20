@@ -7,6 +7,7 @@ from typing import List
 from adafruit_pca9685 import PCA9685
 from adafruit_motor.servo import Servo
 from board import SCL, SDA
+from server.servo import base
 
 # Add the parent directory of 'server' to sys.path
 script_dir = os.path.realpath(os.path.dirname(__file__))
@@ -81,15 +82,14 @@ def move_slow(servo_ids: List[int] | None = None) -> None:
 
 def use_library(servo_ids: List[int] | None = None) -> None:
     """
-    Uses the RPIservo library to control the specified servos
+    Uses the project library to control the specified servos
     :param servo_ids:
     :return:
     """
-    logger.info(f"Using RPIservo library to control servos {servo_ids}.")
+    logger.info(f"Using library to control servos {servo_ids}.")
     controller = None
     try:
-        import RPIservo
-        controller = RPIservo.ServoCtrl()
+        controller = base.ServoCtrl()
         controller.start()
         cycles = 10
         alternate = True  # Flag to alternate positions
@@ -103,8 +103,6 @@ def use_library(servo_ids: List[int] | None = None) -> None:
             while controller.running.is_set():
                 time.sleep(0.1)  # Wait for the controller to finish
             time.sleep(1)  # Pause before the next cycle
-    except ImportError:
-        logger.error("RPIservo library not found.")
     except KeyboardInterrupt:
         logger.info("Interrupted while using the library.")
     finally:
@@ -113,20 +111,17 @@ def use_library(servo_ids: List[int] | None = None) -> None:
 
 def init_servos(servo_ids: List[int] | None = None) -> None:
     """
-    Initializes specified servos to their default position using the RPIservo library.
+    Initializes specified servos to their default positions
     """
     if servo_ids is None:
         servo_ids = [0]
     logger.info("Initializing servos to default positions: %s", servo_ids)
     controller = None
     try:
-        import RPIservo
-        controller = RPIservo.ServoCtrl()
+        controller = base.ServoCtrl()
         controller.start()
         controller.move_init(servo_ids)
         time.sleep(2)  # Allow time for servos to move to default position
-    except ImportError:
-        logger.error("RPIservo library not found.")
     except KeyboardInterrupt:
         logger.info("Interrupted during initialization.")
     finally:
