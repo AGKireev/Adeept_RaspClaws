@@ -3,7 +3,7 @@ from flask import Flask, Response, send_from_directory
 from flask_cors import CORS
 import threading
 import logging
-from server.camera.opencv import Camera
+from camera.opencv import Camera
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -4,8 +4,8 @@ import logging
 from mpu6050 import mpu6050
 
 import config
-from server.system.kalman_filter import KalmanFilter
-from server.servo import base
+from system.kalman_filter import KalmanFilter
+from servo import base
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
