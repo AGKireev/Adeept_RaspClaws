@@ -33,7 +33,8 @@ import json
 # Custom modules
 import config
 import functions
-import servo
+from servo.base import ServoCtrl
+from servo import move
 from system import info
 from light import strip
 # import switch  # The 3 single LEDs switches, we don't need them for now
@@ -72,13 +73,13 @@ rad = 0.5
 turnWiggle = 60
 
 # Initialize servo controllers
-scGear = servo.base.ServoCtrl()
+scGear = ServoCtrl()
 scGear.move_init()
 
-P_sc = servo.base.ServoCtrl()
+P_sc = ServoCtrl()
 P_sc.start()
 
-T_sc = servo.base.ServoCtrl()
+T_sc = ServoCtrl()
 T_sc.start()
 
 # Register graceful shutdown
@@ -124,13 +125,13 @@ def function_select(command_input, response):
 		# switch.switch(3,0)
 
 	elif 'KD' == command_input:
-		servo.move.command(command_input)
+		move.command(command_input)
 
 	elif 'automaticOff' == command_input:
-		servo.move.command(command_input)
+		move.command(command_input)
 
 	elif 'automatic' == command_input:
-		servo.move.command(command_input)
+		move.command(command_input)
 
 	elif 'trackLine' == command_input:
 		flask_app.mode_select('findlineCV')
@@ -179,28 +180,28 @@ def robot_ctrl(command_input, response):
 	global direction_command, turn_command
 	if 'forward' == command_input:
 		direction_command = 'forward'
-		servo.move.command(direction_command)
+		move.command(direction_command)
 
 	elif 'backward' == command_input:
 		direction_command = 'backward'
-		servo.move.command(direction_command)
+		move.command(direction_command)
 
 	elif 'DS' in command_input:
 		direction_command = 'stand'
-		servo.move.command(direction_command)
+		move.command(direction_command)
 
 
 	elif 'left' == command_input:
 		turn_command = 'left'
-		servo.move.command(turn_command)
+		move.command(turn_command)
 
 	elif 'right' == command_input:
 		turn_command = 'right'
-		servo.move.command(turn_command)
+		move.command(turn_command)
 
 	elif 'TS' in command_input:
 		turn_command = 'no'
-		servo.move.command(turn_command)
+		move.command(turn_command)
 
 
 	elif 'lookleft' == command_input:
