@@ -11,7 +11,7 @@ import logging
 from picamera2 import Picamera2
 
 import servo
-from light.strip import LightStrip
+# from light.strip import LightStrip
 from camera.base import BaseCamera
 from system.kalman_filter import KalmanFilter
 
@@ -21,7 +21,7 @@ from system.kalman_filter import KalmanFilter
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-light_strip = LightStrip()
+# light_strip = LightStrip()
 # pid = PID.PID()
 # pid.SetKp(0.5)
 # pid.SetKd(0)
@@ -188,7 +188,7 @@ class CVThread(threading.Thread):
 			#logger.info(motionCounter)
 			#logger.info(text)
 			self.lastMotionCaptured = timestamp
-			light_strip.set_color(255,78,0)
+			# light_strip.set_color(255,78,0)
 			# leds.both_off()
 			# leds.red()
 			# Single LED switches, not used now
@@ -197,7 +197,7 @@ class CVThread(threading.Thread):
 			# switch.switch(3,1)
 
 		if (timestamp - self.lastMotionCaptured).seconds >= 0.5:
-			light_strip.set_color(0,78,255)
+			# light_strip.set_color(0,78,255)
 			# leds.both_off()
 			# leds.blue()
 			self.drawing = 0
@@ -304,12 +304,12 @@ class CVThread(threading.Thread):
 			CVThread.servo_move(CVThread.T_servo, CVThread.T_direction, -error_y)
 
 			if CVThread.X_lock == 1 and CVThread.Y_lock == 1:
-				led.set_color(255,78,0)
+				# light_strip.set_color(255,78,0)
 				# led.both_off()
 				# led.red()
 				logger.info('CVThread: findColor locked')
 			else:
-				led.set_color(0,78,255)
+				# light_strip.set_color(0,78,255)
 				# led.both_off()
 				# led.blue()
 				logger.info('CVThread: findColor unlocked')
