@@ -1,6 +1,5 @@
 # import os
 import cv2
-from server.camera.base import BaseCamera
 import numpy as np
 # import switch  # The 3 single LEDs switches, we don't need them for now
 import datetime
@@ -13,6 +12,7 @@ from picamera2 import Picamera2
 
 import servo
 import light
+from camera.base import BaseCamera
 from system.kalman_filter import KalmanFilter
 
 # os.environ["LIBCAMERA_LOG_LEVELS"] = "2"
