@@ -1,12 +1,12 @@
 # IMPORTANT!
-WORK-IN-PROGRESS!
 Build was tested on:
 Adeept RaspClaws robot
 Raspberry Pi 5 8Gb
 Camera Module 3 (IMX708) -> changed from the stock one!
 Python 3.11
-
-FOR THIS SETUP YOU'll NEED BETTER BATTERIES THAN INCLUDED! 
+FOR THIS SETUP YOU'll _*NEED BETTER BATTERIES*_, 2x 18650 is not sufficient!
+I used: 1x 2S Lipo Battery 50C 2200mAh 7.4V Short Battery
+Discharge rate matters! Or the Raspberry will halt when the motors are running at full!
 
 # How to set env
 cd /home/USERNAME
